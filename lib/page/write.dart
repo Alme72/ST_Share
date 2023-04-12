@@ -1,7 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:kpostal/kpostal.dart';
 import 'package:test_project/page/control.dart';
@@ -18,18 +19,23 @@ class _WriteState extends State<Write> {
   // textfield에서 입력받은 정보를 저장할 변수
   late String userId;
   late String userNickName;
-  late List<XFile> image;
   late String title;
   final TextEditingController _titleController = TextEditingController();
   late String contents;
   final TextEditingController _contentsController = TextEditingController();
   late String location;
   final TextEditingController _locationController = TextEditingController();
-  late String createTime; // 보내는 시간
   late String transaction; //
   late String category; //
-  late int price; // int 변환 필요
+  late int price;
   final TextEditingController _priceController = TextEditingController();
+  final picker = ImagePicker();
+  // 다수의 이미지 저장용
+  late List<XFile> image;
+  // 하나의 이미지 저장용
+  File? _imageFile;
+  // ignore: unused_field
+  late String _uploadedImageUrl;
 
   String categoryCurrentLocation = "default";
   String transactionCurrentLocation = "default";
@@ -51,13 +57,14 @@ class _WriteState extends State<Write> {
     "rental": "대여",
   };
 
-  // 사용자의 image를 받기위한 생성자
+  // 사용자의 다수의 image를 받기위한 생성자
   final ImagePicker _picker = ImagePicker();
   final List<XFile> _selectedFiles = [];
   Future<void> _selectImages() async {
     try {
       final List<XFile> selectedImages = await _picker.pickMultiImage(
-          maxWidth: 640, maxHeight: 280, imageQuality: 100);
+        imageQuality: 100,
+      );
       setState(() {
         if (selectedImages.isNotEmpty) {
           _selectedFiles.addAll(selectedImages);
@@ -71,17 +78,26 @@ class _WriteState extends State<Write> {
     print("Image List length: ${_selectedFiles.length.toString()}");
   }
 
+  // Future _selectImage() async {
+  //   // ignore: deprecated_member_use
+  //   final pickedFile = await picker.getImage(
+  //     source: ImageSource.gallery,
+  //   );
+  //   setState(() {
+  //     _imageFile = File(pickedFile!.path);
+  //   });
+  // }
+
   // textfield에서 입력받은 데이터를 변수에 저장하는 함수
   void _saveData() {
     userId = UserInfo().userId;
     userNickName = UserInfo().userNickName;
-    image = _selectedFiles;
+    //image = _selectedFiles;
     title = _titleController.text;
     contents = _contentsController.text;
     category = categoryCurrentLocation;
     transaction = transactionCurrentLocation;
     location = _locationController.text;
-    //createTime = _locationController.text; // 작성시간 변수 및 post 방법 알아야함
     price = int.parse(_priceController.text.replaceAll(',', ''));
   }
 
@@ -89,32 +105,36 @@ class _WriteState extends State<Write> {
   Future sendDataToServer({
     required String userId,
     required String userNickName,
-    required List<XFile> image,
+    required List<XFile> selectedFiles,
     required String title,
     required String contents,
     required String category,
     required String location,
-    //required String createTime,
     required int price,
   }) async {
-    try {
-      final response = await Dio().post(
-        'https://example.com/endpoint',
-        data: {
-          'userId': userId,
-          'userNickName': userNickName,
-          'image': image,
-          'title': title,
-          'contents': contents,
-          'category': category,
-          'location': location,
-          //'createTime': createTime,
-          'price': price,
-        },
+    final uri = Uri.parse('https://ubuntu.i4624.tk/example/upload');
+    final request = http.MultipartRequest('POST', uri);
+    for (var selectedFile in selectedFiles) {
+      request.files.add(
+        await http.MultipartFile.fromPath('filename', selectedFile.path),
       );
-      print(response.data);
-    } catch (e) {
-      throw Exception('Failed to send data to server');
+    }
+    request.fields['userId'] = userId;
+    request.fields['userNickName'] = userNickName;
+    request.fields['title'] = title;
+    request.fields['contents'] = contents;
+    request.fields['category'] = category;
+    request.fields['location'] = location;
+    request.fields['price'] = price.toString();
+    final response = await request.send();
+    if (response.statusCode == 200) {
+      final responseBody = await response.stream.bytesToString();
+      final jsonResponse = json.decode(responseBody);
+      setState(() {
+        _uploadedImageUrl = jsonResponse['imageUrl'];
+      });
+    } else {
+      print(response.reasonPhrase);
     }
   }
 
@@ -424,19 +444,44 @@ class _WriteState extends State<Write> {
                     );
                   },
                 );
+              } else if (_imageFile == null) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      contentPadding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0)),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: const [
+                          Text(
+                            "사진을 첨부해주세요",
+                          ),
+                        ],
+                      ),
+                      actions: <Widget>[
+                        Center(
+                          child: SizedBox(
+                            width: 250,
+                            child: ElevatedButton(
+                              child: const Text("확인"),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
               }
               // 모든 정보가 입력되었을 때
               else {
                 _saveData();
-                /*
-                print(image);
-                print(title);
-                print(contents);
-                print(location);
-                print(category);
-                print(transaction);
-                print(price);
-                */
                 Navigator.pop(context);
                 Navigator.push(
                   context,
@@ -471,60 +516,58 @@ class _WriteState extends State<Write> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(40, 20, 0, 10),
-                  child: Container(
-                    child: GestureDetector(
-                      onTap: () {
-                        print("click event");
+                  child: GestureDetector(
+                    onTap: () {
+                      print("click event");
+                    },
+                    child: PopupMenuButton<String>(
+                      offset: const Offset(0, 30),
+                      shape: ShapeBorder.lerp(
+                          RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0)),
+                          RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0)),
+                          1),
+                      onSelected: (String value) {
+                        setState(() {
+                          transactionCurrentLocation = value;
+                        });
                       },
-                      child: PopupMenuButton<String>(
-                        offset: const Offset(0, 30),
-                        shape: ShapeBorder.lerp(
-                            RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0)),
-                            RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0)),
-                            1),
-                        onSelected: (String value) {
-                          setState(() {
-                            transactionCurrentLocation = value;
-                          });
-                        },
-                        itemBuilder: (BuildContext context) {
-                          return [
-                            const PopupMenuItem(
-                              value: "sell",
-                              child: Text("판매"),
-                            ),
-                            const PopupMenuItem(
-                              value: "buy",
-                              child: Text("구매"),
-                            ),
-                            const PopupMenuItem(
-                              value: "rental",
-                              child: Text("대여"),
-                            ),
-                          ];
-                        },
-                        //좌측 상단 판매, 구매, 대여 선택바
-                        child: SizedBox(
-                          width: 76,
-                          child: Row(
-                            children: [
-                              //앱 내에서 좌측 상단바 출력을 위한 데이터
-                              Text(
-                                transactionOptionsTypeToString[
-                                    transactionCurrentLocation]!,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const Icon(
-                                Icons.arrow_drop_down,
-                                color: Colors.black,
-                              ),
-                            ],
+                      itemBuilder: (BuildContext context) {
+                        return [
+                          const PopupMenuItem(
+                            value: "sell",
+                            child: Text("판매"),
                           ),
+                          const PopupMenuItem(
+                            value: "buy",
+                            child: Text("구매"),
+                          ),
+                          const PopupMenuItem(
+                            value: "rental",
+                            child: Text("대여"),
+                          ),
+                        ];
+                      },
+                      //좌측 상단 판매, 구매, 대여 선택바
+                      child: SizedBox(
+                        width: 76,
+                        child: Row(
+                          children: [
+                            //앱 내에서 좌측 상단바 출력을 위한 데이터
+                            Text(
+                              transactionOptionsTypeToString[
+                                  transactionCurrentLocation]!,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_drop_down,
+                              color: Colors.black,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -535,66 +578,64 @@ class _WriteState extends State<Write> {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(0, 20, 20, 10),
-                  child: Container(
-                    child: GestureDetector(
-                      onTap: () {
-                        print("click event");
-                        ContentsRepository().loadData();
+                  child: GestureDetector(
+                    onTap: () {
+                      print("click event");
+                      //ContentsRepository().fetchBoardList();
+                    },
+                    child: PopupMenuButton<String>(
+                      offset: const Offset(0, 30),
+                      shape: ShapeBorder.lerp(
+                          RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0)),
+                          RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0)),
+                          1),
+                      onSelected: (String value) {
+                        setState(() {
+                          categoryCurrentLocation = value;
+                        });
                       },
-                      child: PopupMenuButton<String>(
-                        offset: const Offset(0, 30),
-                        shape: ShapeBorder.lerp(
-                            RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0)),
-                            RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0)),
-                            1),
-                        onSelected: (String value) {
-                          setState(() {
-                            categoryCurrentLocation = value;
-                          });
-                        },
-                        itemBuilder: (BuildContext context) {
-                          return [
-                            const PopupMenuItem(
-                              value: "electronics",
-                              child: Text("디지털/가전"),
-                            ),
-                            const PopupMenuItem(
-                              value: "tools",
-                              child: Text("공구"),
-                            ),
-                            const PopupMenuItem(
-                              value: "clothes",
-                              child: Text("의류"),
-                            ),
-                            const PopupMenuItem(
-                              value: "others",
-                              child: Text("기타"),
-                            ),
-                          ];
-                        },
-                        //좌측 상단 판매, 구매, 대여 선택바
-                        child: SizedBox(
-                          width: 100,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              //앱 내에서 좌측 상단바 출력을 위한 데이터
-                              Text(
-                                categoryOptionsTypeToString[
-                                    categoryCurrentLocation]!,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const Icon(
-                                Icons.arrow_drop_down,
-                                color: Colors.black,
-                              ),
-                            ],
+                      itemBuilder: (BuildContext context) {
+                        return [
+                          const PopupMenuItem(
+                            value: "electronics",
+                            child: Text("디지털/가전"),
                           ),
+                          const PopupMenuItem(
+                            value: "tools",
+                            child: Text("공구"),
+                          ),
+                          const PopupMenuItem(
+                            value: "clothes",
+                            child: Text("의류"),
+                          ),
+                          const PopupMenuItem(
+                            value: "others",
+                            child: Text("기타"),
+                          ),
+                        ];
+                      },
+                      //좌측 상단 판매, 구매, 대여 선택바
+                      child: SizedBox(
+                        width: 100,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            //앱 내에서 좌측 상단바 출력을 위한 데이터
+                            Text(
+                              categoryOptionsTypeToString[
+                                  categoryCurrentLocation]!,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_drop_down,
+                              color: Colors.black,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -730,6 +771,31 @@ class _WriteState extends State<Write> {
                     .toList(),
               ),
             ),
+            //Single image
+            //   SizedBox(
+            //     child: Center(
+            //       child: Padding(
+            //         padding: const EdgeInsets.all(2.0),
+            //         child: _imageFile != null
+            //             ? Container(
+            //                 decoration: BoxDecoration(
+            //                   border: Border.all(
+            //                     color: Colors.transparent,
+            //                   ),
+            //                 ),
+            //                 child: SizedBox(
+            //                   width: 150,
+            //                   height: 150,
+            //                   child: Image.file(
+            //                     File(_imageFile!.path),
+            //                     fit: BoxFit.scaleDown,
+            //                   ),
+            //                 ),
+            //               )
+            //             : Container(),
+            //       ),
+            //     ),
+            //   )
           ],
         );
       },
@@ -752,6 +818,7 @@ class _WriteState extends State<Write> {
         onPressed: () {
           print('이미지 추가');
           _selectImages();
+          //_selectImage();
         },
         tooltip: 'Increment',
         backgroundColor: const Color.fromARGB(255, 200, 200, 200),

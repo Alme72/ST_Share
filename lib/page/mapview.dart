@@ -1,75 +1,134 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:naver_map_plugin/naver_map_plugin.dart';
-import 'package:test_project/repository/contents_repository.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:geolocator/geolocator.dart';
 
 class MapView extends StatefulWidget {
-  const MapView({super.key});
+  const MapView({Key? key}) : super(key: key);
 
   @override
-  State<MapView> createState() => _MapViewState();
+  _MapViewState createState() => _MapViewState();
 }
 
 class _MapViewState extends State<MapView> {
-  Completer<NaverMapController> _controller = Completer();
-  final MapType _mapType = MapType.Basic;
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+    //_geocoding = GeocodingPlatform.instance;
+  }
 
-  void onMapCreated(NaverMapController controller) {
-    if (_controller.isCompleted) _controller = Completer();
-    _controller.complete(controller);
+  final TextEditingController _textEditingController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+  late EdgeInsets safeArea;
+  double drawerHeight = 0;
+
+  late NLatLng _initialPosition;
+  late NaverMapController _controller;
+  //late GeocodingPlatform _geocoding;
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    final position = await Geolocator.getCurrentPosition();
+    setState(() {
+      _initialPosition = NLatLng(position.latitude, position.longitude);
+    });
+  }
+
+  // Future<void> _goToAddress(String address) async {
+  //   const apiKey =
+  //       "6AWAOaVaaf3gncmk0OMxo6dGW7xBfco7Yf2ZfPTR"; // 여기에 발급받은 인증키를 입력하세요
+  //   final encodedAddress = Uri.encodeComponent(address);
+  //   final apiUrl =
+  //       "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode?query=$encodedAddress";
+  //   final headers = {
+  //     "X-NCP-APIGW-API-KEY-ID": apiKey,
+  //     "X-NCP-APIGW-API-KEY": apiKey
+  //   };
+
+  //   try {
+  //     final response = await http.get(Uri.parse(apiUrl), headers: headers);
+  //     final jsonResult = jsonDecode(response.body);
+  //     final addresses = jsonResult["addresses"];
+  //     final first = addresses[0];
+  //     final latitude = double.parse(first["y"]);
+  //     final longitude = double.parse(first["x"]);
+  //     final controller = await _controller.future;
+  //     controller.moveCamera(
+  //       NCameraUpdate.toCameraPosition(
+  //         CameraPosition(
+  //           target: LatLng(latitude, longitude),
+  //           zoom: 15,
+  //         ),
+  //       ),
+  //     );
+  //     setState(() {
+  //       _locationData = null;
+  //       _locationText = "($latitude, $longitude)";
+  //     });
+  //   } catch (e) {
+  //     print("Error: $e");
+  //   }
+  // }
+
+  PreferredSizeWidget _appbarWidget() {
+    return AppBar(
+      title: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          color: Colors.white,
+        ),
+        child: TextFormField(
+          controller: _textEditingController,
+          decoration: const InputDecoration(
+            prefixIcon: Icon(Icons.search),
+            hintText: "주소를 입력하세요",
+            border: InputBorder.none,
+          ),
+          onFieldSubmitted: (value) {
+            //_goToAddress(value);
+          },
+        ),
+      ),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+    );
+  }
+
+  Widget _bodyWidget() {
+    return NaverMap(
+      onMapReady: (controller) {
+        _controller = controller;
+      },
+      options: NaverMapViewOptions(
+        initialCameraPosition: NCameraPosition(
+          target: _initialPosition,
+          zoom: 16,
+        ),
+        minZoom: 10,
+        maxZoom: 16,
+        maxTilt: 30,
+        symbolScale: 1,
+        locationButtonEnable: true,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    safeArea = MediaQuery.of(context).padding;
     SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // 투명색
-      ),
+      const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
     );
     return Scaffold(
-      appBar: AppBar(
-        title: Container(
-          decoration: BoxDecoration(
-            boxShadow: const [
-              BoxShadow(
-                blurRadius: 2,
-              ),
-            ],
-            color: Colors.white, // 배경색 지정
-            borderRadius: BorderRadius.circular(7),
-          ),
-          child: TextField(
-            //keyboardType: TextInputType.multiline,
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
-              border: InputBorder.none,
-              hintText: UserInfo().address,
-            ),
-          ),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      appBar: _appbarWidget(),
       extendBodyBehindAppBar: true,
-      body: Column(
-        children: [
-          Flexible(
-            flex: 8,
-            child: NaverMap(
-              onMapCreated: onMapCreated,
-              mapType: _mapType,
-            ),
-          ),
-          Flexible(
-            flex: 2,
-            child: Container(
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
+      body: _bodyWidget(),
     );
   }
 }

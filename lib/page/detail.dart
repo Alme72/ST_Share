@@ -1,3 +1,4 @@
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:test_project/page/home.dart';
 import '../repository/contents_repository.dart';
@@ -22,7 +23,8 @@ class _DetailContentViewState extends State<DetailContentView>
   double locationAlpha = 0;
   late AnimationController _animationController;
   late Animation _colorTween;
-  bool isMyFavoriteContent = false;
+
+  void addList() {}
 
   @override
   void initState() {
@@ -31,11 +33,16 @@ class _DetailContentViewState extends State<DetailContentView>
     _colorTween = ColorTween(begin: Colors.white, end: Colors.black)
         .animate(_animationController);
     imgList = [
-      widget.data["image"],
-      widget.data["image"],
-      widget.data["image"],
-      widget.data["image"],
-      widget.data["image"],
+      UserInfo().defaultImage,
+      UserInfo().defaultImage,
+      UserInfo().defaultImage,
+      UserInfo().defaultImage,
+      UserInfo().defaultImage,
+      // widget.data["image"],
+      // widget.data["image"],
+      // widget.data["image"],
+      // widget.data["image"],
+      // widget.data["image"],
     ];
     _current = 0;
     // _loadMyFavoriteContentState();
@@ -46,7 +53,6 @@ class _DetailContentViewState extends State<DetailContentView>
         } else {
           locationAlpha = controller.offset;
         }
-
         _animationController.value = locationAlpha / 255;
       });
     });
@@ -67,8 +73,9 @@ class _DetailContentViewState extends State<DetailContentView>
 
   Widget _makeIcon(IconData icon) {
     return AnimatedBuilder(
-        animation: _colorTween,
-        builder: (context, child) => Icon(icon, color: Colors.black));
+      animation: _colorTween,
+      builder: (context, child) => Icon(icon, color: Colors.black),
+    );
   }
 
   // appBar Widget 구현
@@ -87,104 +94,98 @@ class _DetailContentViewState extends State<DetailContentView>
     );
   }
 
-  // Widget _makeSliderImage() {
-  //   return SizedBox(
-  //     height: size.width * 0.8,
-  //     child: Stack(
-  //       children: [
-  //         Hero(
-  //           tag: widget.data["cid"],
-  //           child: CarouselSlider(
-  //             options: CarouselOptions(
-  //                 height: size.width * 0.8,
-  //                 initialPage: 0,
-  //                 enableInfiniteScroll: false,
-  //                 viewportFraction: 1.0,
-  //                 enlargeCenterPage: false,
-  //                 onPageChanged: (index, reason) {
-  //                   setState(() {
-  //                     _current = index;
-  //                   });
-  //                 }),
-  //             items: imgList.map((i) {
-  //               return Container(
-  //                 width: size.width,
-  //                 height: size.width,
-  //                 color: Colors.red,
-  //                 child: Image.asset(
-  //                   widget.data["image"],
-  //                   fit: BoxFit.cover,
-  //                 ),
-  //               );
-  //             }).toList(),
-  //           ),
-  //         ),
-  //         Positioned(
-  //           bottom: 0,
-  //           left: 0,
-  //           right: 0,
-  //           child: Row(
-  //             mainAxisAlignment: MainAxisAlignment.center,
-  //             children: List.generate(imgList.length, (index) {
-  //               return Container(
-  //                 width: 8.0,
-  //                 height: 8.0,
-  //                 margin: const EdgeInsets.symmetric(
-  //                     vertical: 10.0, horizontal: 5.0),
-  //                 decoration: BoxDecoration(
-  //                   shape: BoxShape.circle,
-  //                   color: _current == index
-  //                       ? Colors.white
-  //                       : Colors.white.withOpacity(0.4),
-  //                 ),
-  //               );
-  //             }).toList(),
-  //           ),
-  //         )
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  Widget _sellerSimpleInfo() {
-    return Padding(
-      padding: const EdgeInsets.only(
-        top: 80,
-        right: 15,
-        left: 15,
-        bottom: 15,
-      ),
-      child: Row(
+  Widget _makeSliderImage() {
+    return SizedBox(
+      height: size.width * 0.8,
+      child: Stack(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(50),
-            child: SizedBox(
-              width: 50,
-              height: 50,
-              child: Image.asset("assets/images/user.png"),
+          Hero(
+            tag: widget.data["id"],
+            child: CarouselSlider(
+              options: CarouselOptions(
+                  height: size.width * 0.8,
+                  initialPage: 0,
+                  enableInfiniteScroll: false,
+                  viewportFraction: 1.0,
+                  enlargeCenterPage: false,
+                  onPageChanged: (index, reason) {
+                    setState(() {
+                      _current = index;
+                    });
+                  }),
+              items: imgList.map((i) {
+                return SizedBox(
+                  width: size.width,
+                  height: size.width,
+                  child: Image.asset(
+                    UserInfo().defaultImage,
+                    fit: BoxFit.cover,
+                  ),
+                );
+              }).toList(),
             ),
           ),
-          // CircleAvatar(
-          //   radius: 25,
-          //   backgroundImage: Image.asset("assets/images/user.png").image,
-          // ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.data["board_writer"],
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              Text(widget.data["location"]),
-            ],
-          ),
-          // Expanded(
-          //   child: ManorTemperature(manorTemp: 37.3),
-          // )
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(imgList.length, (index) {
+                return Container(
+                  width: 8.0,
+                  height: 8.0,
+                  margin: const EdgeInsets.symmetric(
+                      vertical: 10.0, horizontal: 5.0),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _current == index
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.4),
+                  ),
+                );
+              }).toList(),
+            ),
+          )
         ],
       ),
+    );
+  }
+
+  Widget _sellerSimpleInfo() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(50),
+                child: SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: Image.asset("assets/images/user.png"),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.data["boardWriter"],
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(widget.data["location"]),
+                ],
+              ),
+              // Expanded(
+              //   child: ManorTemperature(manorTemp: 37.3),
+              // )
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -204,14 +205,14 @@ class _DetailContentViewState extends State<DetailContentView>
         children: [
           const SizedBox(height: 20),
           Text(
-            widget.data["board_title"],
+            widget.data["boardTitle"],
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
-            "디지털/가전 ∙ ${widget.data["create_time"]}", //category 추가 건의
+            "디지털/가전 ∙ ${widget.data["boardCreatedTime"]}", //category 추가 건의
             style: const TextStyle(
               fontSize: 12,
               color: Colors.grey,
@@ -219,24 +220,14 @@ class _DetailContentViewState extends State<DetailContentView>
           ),
           const SizedBox(height: 15),
           Text(
-            widget.data["board_contents"],
+            widget.data["boardContents"],
             style: const TextStyle(fontSize: 15, height: 1.5),
           ),
           const SizedBox(height: 15),
           Row(
             children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: Text(
-                  "관심 ∙ ${widget.data["like"].toString()}",
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
               Text(
-                "조회수 ∙ ${widget.data["board_hits"].toString()}",
+                "조회수 ∙ ${widget.data["boardHits"].toString()}",
                 style: const TextStyle(
                   fontSize: 12,
                   color: Colors.grey,
@@ -250,42 +241,12 @@ class _DetailContentViewState extends State<DetailContentView>
     );
   }
 
-  Widget _otherCellContents() {
-    return Padding(
-      padding: const EdgeInsets.all(15),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              Text(
-                "판매자님의 판매 상품",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                "모두보기",
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _bodyWidget() {
     return CustomScrollView(controller: controller, slivers: [
       SliverList(
         delegate: SliverChildListDelegate(
           [
-            //_makeSliderImage(),
+            _makeSliderImage(),
             _sellerSimpleInfo(),
             _line(),
             _contentDetail(),
