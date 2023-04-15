@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:kpostal/kpostal.dart';
 import 'package:test_project/page/control.dart';
 import 'package:test_project/repository/contents_repository.dart';
 
@@ -36,14 +37,16 @@ class _WriteState extends State<Write> {
 
   // 사용자의 이미지 저장하는 리스트
   final List<XFile> _selectedFiles = [];
+  late String imageUid;
+  late String imageName;
 
   // ignore: unused_field
   late String _uploadedImageUrl;
 
+  String productCategoryCurrentLocation = "default";
   String categoryCurrentLocation = "default";
 
   // 카테고리 선택
-  String productCategoryCurrentLocation = "default";
   final Map<String, dynamic> productCategoryOptionsTypeToString = {
     "default": "카테고리",
     "electronics": "디지털/가전",
@@ -150,7 +153,7 @@ class _WriteState extends State<Write> {
   // Send Data To Server
   Future _sendDataToServer({
     //required String userId,
-    required List<dynamic> images,
+    required dynamic images,
     required String userNickName,
     required String title,
     required String contents,
@@ -530,11 +533,11 @@ class _WriteState extends State<Write> {
                   //userId: UserInfo().userId,
                 );
                 _getImageIdData();
-                // _imageJsonToData;
+                _convertImageData(imageJsonData);
                 _saveData();
                 _sendDataToServer(
                   userNickName: UserInfo().userNickName,
-                  images: imageJsonData,
+                  images: imageData, //have to modify
                   title: title,
                   contents: contents,
                   category: category,
@@ -725,25 +728,25 @@ class _WriteState extends State<Write> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
               child: TextField(
                 controller: _locationController, // 주소를 입력받는 TextField에 컨트롤러 할당
-                // readOnly: true, // TextField를 읽기 전용으로 설정하여 사용자 입력을 막음
-                // onTap: () async {
-                //   await Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder: (_) => KpostalView(
-                //         callback: (Kpostal result) {
-                //           print(result.address);
-                //           setState(() {
-                //             location =
-                //                 result.address; // 주소를 선택하면 해당 값을 상태 변수에 저장
-                //             _locationController.text =
-                //                 location; // 상태 변수의 값을 TextField에 출력
-                //           });
-                //         },
-                //       ),
-                //     ),
-                //   );
-                // },
+                readOnly: true, // TextField를 읽기 전용으로 설정하여 사용자 입력을 막음
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => KpostalView(
+                        callback: (Kpostal result) {
+                          print(result.address);
+                          setState(() {
+                            location =
+                                result.address; // 주소를 선택하면 해당 값을 상태 변수에 저장
+                            _locationController.text =
+                                location; // 상태 변수의 값을 TextField에 출력
+                          });
+                        },
+                      ),
+                    ),
+                  );
+                },
                 decoration: const InputDecoration(
                   enabledBorder: UnderlineInputBorder(),
                   isDense: true,
@@ -831,48 +834,6 @@ class _WriteState extends State<Write> {
                     .toList(),
               ),
             ),
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () {
-                    print("Get imageUid");
-                    _getImageIdData();
-                  },
-                  style: const ButtonStyle(),
-                  child: const Text("Get imageUid"),
-                ),
-                TextButton(
-                  onPressed: () {
-                    print(imageJsonData);
-                  },
-                  style: const ButtonStyle(),
-                  child: const Text("Result Json"),
-                ),
-                TextButton(
-                  onPressed: () {
-                    if (imageJsonData.isEmpty) {
-                      print("imageJsonData is Empty");
-                    } else {
-                      _convertImageData(imageJsonData);
-                      print("Json To Data");
-                    }
-                  },
-                  style: const ButtonStyle(),
-                  child: const Text("Json To Data"),
-                ),
-                TextButton(
-                  onPressed: () {
-                    if (imageData.isEmpty) {
-                      print("imageData is Empty");
-                    } else {
-                      print(imageData);
-                    }
-                  },
-                  style: const ButtonStyle(),
-                  child: const Text("Result Data"),
-                ),
-              ],
-            )
           ],
         );
       },
