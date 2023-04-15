@@ -1,0 +1,40 @@
+--- !tapi-tbd
+tbd-version:     4
+targets:         [ arm64-macos ]
+flags:           [ not_app_extension_safe ]
+install-name:    '@rpath/wakelock_macos.framework/Versions/A/wakelock_macos'
+swift-abi-version: 7
+exports:
+  - targets:         [ arm64-macos ]
+    symbols:         [ '_$s14wakelock_macos19WakelockMacosPluginC06enableC06reasonySS_tF', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC06enableC06reasonySS_tFTq', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC06enableC06reasonySS_tFfA_', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC07disableC0yyF', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC07disableC0yyFTq', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC0A7EnabledSbvM', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC0A7EnabledSbvMTq', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC0A7EnabledSbvg', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC0A7EnabledSbvgTq', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC0A7EnabledSbvpMV', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC0A7EnabledSbvpWvd', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC0A7EnabledSbvpfi', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC0A7EnabledSbvs', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC0A7EnabledSbvsTq', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC11assertionIDs6UInt32VvM', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC11assertionIDs6UInt32VvMTq', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC11assertionIDs6UInt32Vvg', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC11assertionIDs6UInt32VvgTq', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC11assertionIDs6UInt32VvpMV', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC11assertionIDs6UInt32VvpWvd', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC11assertionIDs6UInt32Vvpfi', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC11assertionIDs6UInt32Vvs', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC11assertionIDs6UInt32VvsTq', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC6handle_6resultySo17FlutterMethodCallC_yypSgctF', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC6handle_6resultySo17FlutterMethodCallC_yypSgctFTq', 
+                       '_$s14wakelock_macos19WakelockMacosPluginC8register4withySo07FlutterE9Registrar_p_tFZ', 
+                       '_$s14wakelock_macos19WakelockMacosPluginCACycfC', '_$s14wakelock_macos19WakelockMacosPluginCACycfc', 
+                       '_$s14wakelock_macos19WakelockMacosPluginCMa', '_$s14wakelock_macos19WakelockMacosPluginCMn', 
+                       '_$s14wakelock_macos19WakelockMacosPluginCN', '_$s14wakelock_macos19WakelockMacosPluginCfD', 
+                       _wakelock_macosVersionNumber, _wakelock_macosVersionString ]
+    objc-classes:    [ PodsDummy_wakelock_macos, _TtC14wakelock_macos19WakelockMacosPlugin ]
+...
