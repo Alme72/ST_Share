@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.flutter_application_1.app-mergeDebugResources-27:/values-en-rAU/values-en-rAU.xml",
+            "outputFile": "com.example.flutter_application_1.app-mergeDebugResources-33:/values-en-rAU/values-en-rAU.xml",
             "map": [
                 {
                     "source": "/Users/alme/.gradle/caches/transforms-3/392643a040d0a7ef9b2ed4537c4719d5/transformed/browser-1.4.0/res/values-en-rAU/values-en-rAU.xml",

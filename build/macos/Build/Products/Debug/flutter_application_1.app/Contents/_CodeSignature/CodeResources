@@ -10,7 +10,7 @@
 		</data>
 		<key>Resources/Assets.car</key>
 		<data>
-		QRU3/LZV3Ti5yJ343NbUp08Khhk=
+		7LEOHupvVg19tJ0eEbZbtkwKGs4=
 		</data>
 		<key>Resources/Base.lproj/MainMenu.nib</key>
 		<data>
@@ -23,10 +23,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			s6xlBxLRdua6fZ+faAJH0Ami1ik=
+			SicGQJFm2xStHE7NIESJiAnHnWE=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"b3ac650712d176e6ba7d9f9f680247d009a2d629"</string>
+			<string>cdhash H"4a2706409166db14ad1c4ecd2044898809c79d61"</string>
 		</dict>
 		<key>Frameworks/FlutterMacOS.framework</key>
 		<dict>
@@ -36,6 +36,15 @@
 			</data>
 			<key>requirement</key>
 			<string>cdhash H"583dd608f053efe75027d86b8567b7cf6fa250f5"</string>
+		</dict>
+		<key>Frameworks/geolocator_apple.framework</key>
+		<dict>
+			<key>cdhash</key>
+			<data>
+			OBIzOcspqt2mH/FXILhoO//xMmU=
+			</data>
+			<key>requirement</key>
+			<string>cdhash H"38123339cb29aadda61ff15720b8683bfff13265"</string>
 		</dict>
 		<key>Frameworks/libswiftAppKit.dylib</key>
 		<dict>
@@ -190,6 +199,33 @@
 			<key>requirement</key>
 			<string>cdhash H"3406aab10f486b91c2d9334de341504de56a5631" or cdhash H"73e04119822f2d8cd5eeb426ddac2b2b98295def"</string>
 		</dict>
+		<key>Frameworks/location.framework</key>
+		<dict>
+			<key>cdhash</key>
+			<data>
+			MfMmlm9aWdD51MhEu12hYitmf2Y=
+			</data>
+			<key>requirement</key>
+			<string>cdhash H"31f326966f5a59d0f9d4c844bb5da1622b667f66"</string>
+		</dict>
+		<key>Frameworks/path_provider_foundation.framework</key>
+		<dict>
+			<key>cdhash</key>
+			<data>
+			zY8HDbntosBzrDcCrh3a9zr4pcs=
+			</data>
+			<key>requirement</key>
+			<string>cdhash H"cd8f070db9eda2c073ac3702ae1ddaf73af8a5cb"</string>
+		</dict>
+		<key>Frameworks/wakelock_macos.framework</key>
+		<dict>
+			<key>cdhash</key>
+			<data>
+			jB3ODxW86IXy3Y4F13pkvlINF5M=
+			</data>
+			<key>requirement</key>
+			<string>cdhash H"8c1dce0f15bce885f2dd8e05d77a64be520d1793"</string>
+		</dict>
 		<key>Resources/AppIcon.icns</key>
 		<dict>
 			<key>hash2</key>
@@ -201,7 +237,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			EuJWQbOeKwc3a4+9WzZlGBFiDGAjKABusxYRiJ3iw60=
+			KFHcnPCkRqxcSoM+6IpThcBWVYb/hwDKZCvdeMON4hM=
 			</data>
 		</dict>
 		<key>Resources/Base.lproj/MainMenu.nib</key>
