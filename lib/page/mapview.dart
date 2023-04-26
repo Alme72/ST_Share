@@ -149,9 +149,9 @@ class _MapViewState extends State<MapView> {
     return Scaffold(
       appBar: _appbarWidget(),
       extendBodyBehindAppBar: true,
-      body: _initialPosition.latitude != 0
-          ? _bodyWidget()
-          : const Center(child: CircularProgressIndicator()),
+      body: _initialPosition.latitude == 0 && _initialPosition.longitude == 0
+          ? const Center(child: CircularProgressIndicator())
+          : _bodyWidget(),
     );
   }
 }
