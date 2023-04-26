@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test_project/page/control.dart';
 import 'package:http/http.dart' as http;
+import 'package:test_project/repository/contents_repository.dart';
 
 class LogIn extends StatefulWidget {
   const LogIn({super.key});
@@ -15,7 +16,7 @@ class LogIn extends StatefulWidget {
 class _LogInState extends State<LogIn> {
   TextEditingController userId = TextEditingController();
   TextEditingController userPassword = TextEditingController();
-  String? jwt;
+  String jwt = "default";
 
   Future<void> saveJWT(String jwt) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -27,7 +28,7 @@ class _LogInState extends State<LogIn> {
     return prefs.getString('jwt');
   }
 
-  Future<String?> _sendDataToServer({
+  Future<String> _sendDataToServer({
     required String userId,
     required String password,
   }) async {
@@ -58,6 +59,14 @@ class _LogInState extends State<LogIn> {
     }
   }
 
+  Future<void> _saveJWT() async {
+    jwt = await _sendDataToServer(
+      userId: userId.text,
+      password: userPassword.text,
+    );
+    saveJWT(jwt);
+  }
+
   Future<void> _getTest() async {
     var url = Uri.parse('https://ubuntu.i4624.tk/api/v1/user');
     var response = await http.get(url);
@@ -73,7 +82,7 @@ class _LogInState extends State<LogIn> {
     return AppBar(
       title: const Text('로그인'),
       elevation: 0.0,
-      backgroundColor: Colors.redAccent,
+      backgroundColor: Colors.blueAccent,
       centerTitle: true,
     );
   }
@@ -129,16 +138,12 @@ class _LogInState extends State<LogIn> {
                               minWidth: 100.0,
                               height: 50.0,
                               child: ElevatedButton(
-                                onPressed: () async {
-                                  jwt = await _sendDataToServer(
-                                    userId: userId.text,
-                                    password: userPassword.text,
-                                  );
-                                  if (jwt != null) {
-                                    saveJWT(jwt!);
-                                    // ignore: use_build_context_synchronously
+                                onPressed: () {
+                                  _saveJWT();
+                                  if (jwt != "default") {
+                                    UserInfo().userId = userId.text;
+                                    UserInfo().password = userPassword.text;
                                     Navigator.pop(context);
-                                    // ignore: use_build_context_synchronously
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
@@ -148,17 +153,51 @@ class _LogInState extends State<LogIn> {
                                   } else {
                                     showDialog(
                                       context: context,
+                                      barrierDismissible: false,
                                       builder: (BuildContext context) {
                                         return AlertDialog(
-                                          title: const Text("로그인 실패"),
-                                          content: const Text(
-                                              "아이디와 비밀번호를 다시 확인해주세요."),
+                                          contentPadding:
+                                              const EdgeInsets.fromLTRB(
+                                                  0, 20, 0, 5),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10.0)),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: const [
+                                              Text(
+                                                "ID 또는 패스워드를 확인해주세요.",
+                                              ),
+                                            ],
+                                          ),
                                           actions: <Widget>[
-                                            TextButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text("확인"),
+                                            Center(
+                                              child: SizedBox(
+                                                width: 250,
+                                                child: ElevatedButton(
+                                                  style: ButtonStyle(
+                                                    backgroundColor:
+                                                        MaterialStateColor
+                                                            .resolveWith(
+                                                      (states) {
+                                                        if (states.contains(
+                                                            MaterialState
+                                                                .disabled)) {
+                                                          return Colors.grey;
+                                                        } else {
+                                                          return Colors.blue;
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                  child: const Text("확인"),
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                ),
+                                              ),
                                             ),
                                           ],
                                         );
@@ -167,7 +206,7 @@ class _LogInState extends State<LogIn> {
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orangeAccent,
+                                  backgroundColor: Colors.blueAccent,
                                 ),
                                 child: const Text("로그인"),
                               ),
