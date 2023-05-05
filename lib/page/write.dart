@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test_project/page/control.dart';
 import 'package:test_project/repository/contents_repository.dart';
 
@@ -61,8 +62,10 @@ class _WriteState extends State<Write> {
   };
 
   // textfield에서 입력받은 데이터를 변수에 저장하는 함수
-  void _saveData() {
-    userId = UserInfo().userId;
+  Future<void> _saveData() async {
+    await getUserId();
+    //await _convertImageJsonData(imageJsonData);
+    userId = userId;
     userNickName = UserInfo().userNickName;
     title = _titleController.text;
     contents = _contentsController.text; // 카테고리
@@ -102,7 +105,7 @@ class _WriteState extends State<Write> {
       request.files.add(
         await http.MultipartFile.fromPath('filename', selectedFile.path),
       );
-      request.fields['user'] = UserInfo().userId;
+      request.fields['user'] = userId;
     }
     final response = await request.send();
     if (response.statusCode == 200) {
@@ -110,6 +113,7 @@ class _WriteState extends State<Write> {
       final jsonResponse = json.decode(responseBody);
       setState(() {
         _uploadedImageUrl = jsonResponse['imageUrl'];
+        getUserId();
         print("이미지 전송");
       });
     } else {
@@ -122,7 +126,7 @@ class _WriteState extends State<Write> {
   List<dynamic> imageJsonData = [];
   Future<List> _getImageIdData() async {
     var url = Uri.parse(
-        'https://ubuntu.i4624.tk/image/sql/recent/${UserInfo().userId}/${_selectedFiles.length}');
+        'https://ubuntu.i4624.tk/image/sql/recent/$userId/${_selectedFiles.length}');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       final List<dynamic> responseData =
@@ -138,6 +142,8 @@ class _WriteState extends State<Write> {
   List<Map<String, dynamic>> imageData = [];
   Future<List<Map<String, dynamic>>> _convertImageJsonData(
       List<dynamic> imageJsonData) async {
+    await _uploadImagesToServer(selectedFiles: _selectedFiles);
+    await _getImageIdData();
     imageJsonData = await _getImageIdData();
     return imageData = imageJsonData
         .map<Map<String, dynamic>>((data) => {
@@ -157,16 +163,18 @@ class _WriteState extends State<Write> {
     required String location,
     required int price,
   }) async {
-    final uri = Uri.parse('https://ubuntu.i4624.tk/board/save');
+    await _saveData();
+    //await _getImageIdData();
+    final uri = Uri.parse('https://ubuntu.i4624.tk/api/v1/post');
     final request = http.MultipartRequest('POST', uri);
-    //request.fields['userId'] = UserInfo().userId;
+    request.fields['userId'] = userId;
     for (final image in imageData) {
       request.fields['imageUID[]'] = image['imageUid'];
       //request.fields['imageName[]'] = image['imageName'];
     }
-    request.fields['boardWriter'] = userNickName;
-    request.fields['boardTitle'] = title;
-    request.fields['boardContents'] = contents;
+    request.fields['writer'] = userNickName;
+    request.fields['title'] = title;
+    request.fields['contents'] = contents;
     request.fields['boardCategory'] = category;
     request.fields['location'] = location;
     request.fields['price'] = price.toString();
@@ -182,6 +190,13 @@ class _WriteState extends State<Write> {
       print(response.reasonPhrase);
       throw Exception('Failed to send total data');
     }
+  }
+
+  Future<String?> getUserId() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    userId = prefs.getString('userId')!;
+    print(userId);
+    return userId;
   }
 
   // Appbar Widget
@@ -238,7 +253,7 @@ class _WriteState extends State<Write> {
                       : Colors.black),
             ),
             onPressed: () {
-              // 거래방식 정보가 비어있을 때
+              //거래방식 정보가 비어있을 때
               if (categoryCurrentLocation == "default") {
                 showDialog(
                   context: context,
@@ -489,51 +504,44 @@ class _WriteState extends State<Write> {
                     );
                   },
                 );
+              } else if (_selectedFiles.isEmpty) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      contentPadding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0)),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: const [
+                          Text(
+                            "사진을 첨부해주세요",
+                          ),
+                        ],
+                      ),
+                      actions: <Widget>[
+                        Center(
+                          child: SizedBox(
+                            width: 250,
+                            child: ElevatedButton(
+                              child: const Text("확인"),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
               }
-              // else if (_imageFile == null) {
-              //   showDialog(
-              //     context: context,
-              //     barrierDismissible: false,
-              //     builder: (BuildContext context) {
-              //       return AlertDialog(
-              //         contentPadding: const EdgeInsets.fromLTRB(0, 20, 0, 5),
-              //         shape: RoundedRectangleBorder(
-              //             borderRadius: BorderRadius.circular(10.0)),
-              //         content: Column(
-              //           mainAxisSize: MainAxisSize.min,
-              //           crossAxisAlignment: CrossAxisAlignment.center,
-              //           children: const [
-              //             Text(
-              //               "사진을 첨부해주세요",
-              //             ),
-              //           ],
-              //         ),
-              //         actions: <Widget>[
-              //           Center(
-              //             child: SizedBox(
-              //               width: 250,
-              //               child: ElevatedButton(
-              //                 child: const Text("확인"),
-              //                 onPressed: () {
-              //                   Navigator.pop(context);
-              //                 },
-              //               ),
-              //             ),
-              //           ),
-              //         ],
-              //       );
-              //     },
-              //   );
-              // }
               // 모든 정보가 입력되었을 때
               else {
-                _uploadImagesToServer(
-                  selectedFiles: _selectedFiles,
-                  //userId: UserInfo().userId,
-                );
-                _getImageIdData();
-                _convertImageJsonData(imageJsonData);
-                _saveData();
+                // _convertImageJsonData(imageJsonData);
                 _sendDataToServer(
                   userNickName: UserInfo().userNickName,
                   imageData: imageData,
@@ -829,65 +837,74 @@ class _WriteState extends State<Write> {
                     .toList(),
               ),
             ),
-            // Row(
-            //   children: [
-            //     TextButton(
-            //       onPressed: () {
-            //         print("Send Image");
-            //         _uploadImagesToServer(
-            //           selectedFiles: _selectedFiles,
-            //         );
-            //         //print(imageJsonData);
-            //       },
-            //       child: const Text("Send Image"),
-            //     ),
-            //   ],
-            // ),
-            // Row(
-            //   children: [
-            //     TextButton(
-            //       onPressed: () {
-            //         print("Get ImageData");
-            //         _getImageIdData();
-            //         //print(imageJsonData);
-            //       },
-            //       child: const Text("Get ImageData"),
-            //     ),
-            //     TextButton(
-            //       onPressed: () {
-            //         print("Print imageJsonData");
-            //         print(imageJsonData);
-            //       },
-            //       child: const Text("Print imageJsonData"),
-            //     ),
-            //   ],
-            // ),
-            // Row(
-            //   children: [
-            //     TextButton(
-            //       onPressed: () {
-            //         print("Convert ImageData");
-            //         _convertImageJsonData(imageJsonData);
-            //       },
-            //       child: const Text("Convert ImageData"),
-            //     ),
-            //     TextButton(
-            //       onPressed: () {
-            //         print("Print ImageData");
-            //         print(imageData);
-            //       },
-            //       child: const Text("Print ImageData"),
-            //     ),
-            //     TextButton(
-            //       onPressed: () {
-            //         print("Total Test");
-            //         //_getImageIdData();
-            //         _convertImageJsonData(imageJsonData);
-            //       },
-            //       child: const Text("Print ImageData"),
-            //     ),
-            //   ],
-            // ),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () {
+                    print("Save UserId");
+                    getUserId();
+                    //print(imageJsonData);
+                  },
+                  child: const Text("Save UserId"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    print("Send Image");
+                    _uploadImagesToServer(
+                      selectedFiles: _selectedFiles,
+                    );
+                    //print(imageJsonData);
+                  },
+                  child: const Text("Send Image"),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () {
+                    print("Get ImageData");
+                    _getImageIdData();
+                    //print(imageJsonData);
+                  },
+                  child: const Text("Get ImageData"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    print("Print imageJsonData");
+                    print(imageJsonData);
+                  },
+                  child: const Text("Print imageJsonData"),
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () {
+                    print("Convert ImageData");
+                    _convertImageJsonData(imageJsonData);
+                  },
+                  child: const Text("Convert ImageData"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    print("Print ImageData");
+                    print(imageData);
+                    print(userId);
+                  },
+                  child: const Text("Print ImageData"),
+                ),
+                TextButton(
+                  onPressed: () {
+                    print("Total Test");
+                    //_getImageIdData();
+                    _convertImageJsonData(imageJsonData);
+                  },
+                  child: const Text("Print ImageData"),
+                ),
+              ],
+            ),
           ],
         );
       },
