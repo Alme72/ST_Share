@@ -1,5 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test_project/page/control.dart';
+import 'package:http/http.dart' as http;
+
+import '../repository/contents_repository.dart';
 
 class LogIn extends StatefulWidget {
   const LogIn({super.key});
@@ -8,49 +14,115 @@ class LogIn extends StatefulWidget {
   State<LogIn> createState() => _LogInState();
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class _LogInState extends State<LogIn> {
+  TextEditingController userId = TextEditingController();
+  TextEditingController userPassword = TextEditingController();
+  String? jwt;
+  //List<Map<String, dynamic>> temp = [];
 
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Login',
-      home: LogIn(),
+  // 앱내에 JWT 저장
+  Future<void> saveJWT(String jwt, String userId) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('jwt', jwt);
+    prefs.setString('userId', userId);
+  }
+
+  Future<String?> getJWT() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    print(prefs.getString('jwt'));
+    return prefs.getString('jwt');
+  }
+
+  Future<String?> getUserId() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String userId = prefs.getString('userId')!;
+    setState(() {
+      UserInfo.userId = userId;
+    });
+    return UserInfo.userId;
+  }
+
+  Future<String?> _sendDataToServer({
+    required String userId,
+    required String password,
+  }) async {
+    final uri = Uri.parse('https://ubuntu.i4624.tk/login');
+    final headers = {'Content-Type': 'application/json'};
+    final body = jsonEncode({'username': userId, 'password': password});
+    final response = await http
+        .post(
+          uri,
+          headers: headers,
+          body: body,
+        )
+        .timeout(const Duration(seconds: 5));
+
+    if (response.statusCode == 200) {
+      final responseHeader = response.headers;
+      if (responseHeader.isEmpty) {
+        print("responseBody is Empty");
+      }
+      setState(() {
+        final getToken = responseHeader['authorization']!;
+        jwt = getToken.replaceFirst("Bearer ", "");
+        print(jwt);
+      });
+      return jwt;
+    } else {
+      print(response.reasonPhrase);
+      jwt = null;
+      return throw Exception('Failed to send data');
+    }
+  }
+
+  // JWT를 변수에 저장(어플 종료 후 삭제)
+  Future<void> _saveJWT() async {
+    jwt = await _sendDataToServer(
+      userId: userId.text,
+      password: userPassword.text,
+    );
+    if (jwt != null) {
+      saveJWT(jwt!, userId.text);
+      getUserId();
+    } else {
+      jwt = null;
+    }
+  }
+
+  Future<void> _base64Test() async {
+    await getJWT();
+    List<String> tokenParts = jwt!.split('.');
+    //List<int> decodedBytes = base64.decode(base64EncodedData);
+    String decodedString = utf8.decode(base64Url.decode(tokenParts[1]));
+    print(decodedString);
+  }
+
+  PreferredSizeWidget _appbarWidget() {
+    return AppBar(
+      title: const Text('로그인'),
+      elevation: 0.0,
+      backgroundColor: Colors.blueAccent,
+      centerTitle: true,
     );
   }
-}
 
-class _LogInState extends State<LogIn> {
-  TextEditingController controller = TextEditingController();
-  TextEditingController controller2 = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('로그인'),
-        elevation: 0.0,
-        backgroundColor: Colors.redAccent,
-        centerTitle: true,
-      ),
-      // email, password 입력하는 부분을 제외한 화면을 탭하면, 키보드 사라지게 GestureDetector 사용
-      body: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const Padding(padding: EdgeInsets.only(top: 50)),
-              const Center(
-                child: Image(
-                  image: AssetImage("assets/images/ex1.png"),
-                  width: 170.0,
-                ), //로고가 필요할 경우 넣는 부분
+  Widget _bodyWidget() {
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 50)),
+            const Center(
+              child: Image(
+                image: AssetImage("assets/images/ex1.png"),
+                width: 170.0,
               ),
-              Form(
-                  child: Theme(
+            ),
+            Form(
+              child: Theme(
                 data: ThemeData(
                   primaryColor: Colors.grey,
                   inputDecorationTheme: const InputDecorationTheme(
@@ -61,70 +133,186 @@ class _LogInState extends State<LogIn> {
                   ),
                 ),
                 child: Container(
-                    padding: const EdgeInsets.all(40.0),
-                    child: Builder(builder: (context) {
+                  padding: const EdgeInsets.all(40.0),
+                  child: Builder(
+                    builder: (context) {
                       return Column(
                         children: [
                           TextField(
-                            controller: controller,
-                            autofocus: true,
+                            controller: userId,
                             decoration:
                                 const InputDecoration(labelText: 'ID 입력'),
                             keyboardType: TextInputType.emailAddress,
                           ),
                           TextField(
-                            controller: controller2,
+                            controller: userPassword,
                             decoration:
                                 const InputDecoration(labelText: '비밀번호 입력'),
                             keyboardType: TextInputType.text,
                             obscureText: true, // 비밀번호 안보이도록 하는 것
                           ),
-                          const SizedBox(
-                            height: 40.0,
-                          ),
-                          ButtonTheme(
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: ButtonTheme(
                               minWidth: 100.0,
                               height: 50.0,
                               child: ElevatedButton(
-                                onPressed: () {
-                                  if (controller.text == 'example' &&
-                                      controller2.text == '1234') {
-                                    Navigator.push(
+                                onPressed: () async {
+                                  try {
+                                    await _saveJWT();
+                                    if (jwt != null) {
+                                      // ignore: use_build_context_synchronously
+                                      Navigator.pop(context);
+                                      // ignore: use_build_context_synchronously
+                                      Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (BuildContext context) =>
-                                                const NextPage()));
-                                  } else if (controller.text == 'example' &&
-                                      controller2.text != '1234') {
-                                    showSnackBar(context,
-                                        const Text('잘못된 비밀번호입니다. 다시 입력해주세요.'));
-                                  } else if (controller.text != 'example' &&
-                                      controller2.text == '1234') {
-                                    showSnackBar(context,
-                                        const Text('잘못된 ID입니다. 다시 입력해주세요.'));
-                                  } else {
-                                    showSnackBar(
-                                        context,
-                                        const Text(
-                                            '입력정보가 올바르지 않습니다. 다시 입력해주세요.'));
+                                          builder: (context) => const Control(),
+                                        ),
+                                      );
+                                    } else {
+                                      // ignore: use_build_context_synchronously
+                                      showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            contentPadding:
+                                                const EdgeInsets.fromLTRB(
+                                                    0, 20, 0, 5),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        10.0)),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: const [
+                                                Text(
+                                                  "ID 또는 패스워드를 확인해주세요.",
+                                                ),
+                                              ],
+                                            ),
+                                            actions: <Widget>[
+                                              Center(
+                                                child: SizedBox(
+                                                  width: 250,
+                                                  child: ElevatedButton(
+                                                    style: ButtonStyle(
+                                                      backgroundColor:
+                                                          MaterialStateColor
+                                                              .resolveWith(
+                                                        (states) {
+                                                          if (states.contains(
+                                                              MaterialState
+                                                                  .disabled)) {
+                                                            return Colors.grey;
+                                                          } else {
+                                                            return Colors.blue;
+                                                          }
+                                                        },
+                                                      ),
+                                                    ),
+                                                    child: const Text("확인"),
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                    }
+                                  } catch (e) {
+                                    showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          contentPadding:
+                                              const EdgeInsets.fromLTRB(
+                                                  0, 20, 0, 5),
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10.0)),
+                                          content: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: const [
+                                              Text(
+                                                "서버와의 통신이 불안정합니다.",
+                                              ),
+                                            ],
+                                          ),
+                                          actions: <Widget>[
+                                            Center(
+                                              child: SizedBox(
+                                                width: 250,
+                                                child: ElevatedButton(
+                                                  style: ButtonStyle(
+                                                    backgroundColor:
+                                                        MaterialStateColor
+                                                            .resolveWith(
+                                                      (states) {
+                                                        if (states.contains(
+                                                            MaterialState
+                                                                .disabled)) {
+                                                          return Colors.grey;
+                                                        } else {
+                                                          return Colors.blue;
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                  child: const Text("확인"),
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
                                   }
                                 },
                                 style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.orangeAccent),
-                                child: const Icon(
-                                  Icons.arrow_forward,
-                                  color: Colors.white,
-                                  size: 35.0,
+                                  backgroundColor: Colors.blueAccent,
                                 ),
-                              ))
+                                child: const Text("로그인"),
+                              ),
+                            ),
+                          )
                         ],
                       );
-                    })),
-              ))
-            ],
-          ),
+                    },
+                  ),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                _saveJWT();
+                _base64Test();
+              },
+              child: const Text("테스트"),
+            )
+          ],
         ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: _appbarWidget(),
+      body: _bodyWidget(),
     );
   }
 }
@@ -135,16 +323,5 @@ void showSnackBar(BuildContext context, Text text) {
     backgroundColor: const Color.fromARGB(255, 112, 48, 48),
   );
 
-// Find the ScaffoldMessenger in the widget tree
-// and use it to show a SnackBar.
   ScaffoldMessenger.of(context).showSnackBar(snackBar);
-}
-
-class NextPage extends StatelessWidget {
-  const NextPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return const Control();
-  }
 }

@@ -24,26 +24,13 @@ class _DetailContentViewState extends State<DetailContentView>
   late AnimationController _animationController;
   late Animation _colorTween;
 
-  void addList() {}
-
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(vsync: this);
     _colorTween = ColorTween(begin: Colors.white, end: Colors.black)
         .animate(_animationController);
-    imgList = [
-      UserInfo().defaultImage,
-      UserInfo().defaultImage,
-      UserInfo().defaultImage,
-      UserInfo().defaultImage,
-      UserInfo().defaultImage,
-      // widget.data["image"],
-      // widget.data["image"],
-      // widget.data["image"],
-      // widget.data["image"],
-      // widget.data["image"],
-    ];
+    imgList = widget.data["image"];
     _current = 0;
     // _loadMyFavoriteContentState();
     controller.addListener(() {
@@ -105,8 +92,8 @@ class _DetailContentViewState extends State<DetailContentView>
               options: CarouselOptions(
                   height: size.width * 0.8,
                   initialPage: 0,
-                  enableInfiniteScroll: false,
-                  viewportFraction: 1.0,
+                  enableInfiniteScroll: true,
+                  viewportFraction: 1,
                   enlargeCenterPage: false,
                   onPageChanged: (index, reason) {
                     setState(() {
@@ -117,8 +104,10 @@ class _DetailContentViewState extends State<DetailContentView>
                 return SizedBox(
                   width: size.width,
                   height: size.width,
-                  child: Image.asset(
-                    UserInfo().defaultImage,
+                  child: Image.network(
+                    widget.data["image"][_current],
+                    width: double.infinity,
+                    scale: 0.1,
                     fit: BoxFit.cover,
                   ),
                 );
@@ -140,8 +129,9 @@ class _DetailContentViewState extends State<DetailContentView>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: _current == index
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.4),
+                        ? Colors.black //Colors.white
+                        : Colors.grey
+                            .withOpacity(0.4), //Colors.white.withOpacity(0.4),
                   ),
                 );
               }).toList(),
@@ -255,37 +245,6 @@ class _DetailContentViewState extends State<DetailContentView>
           ],
         ),
       ),
-      // SliverPadding(
-      //   padding: const EdgeInsets.symmetric(horizontal: 15),
-      //   sliver: SliverGrid(
-      //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      //         crossAxisCount: 2, mainAxisSpacing: 10, crossAxisSpacing: 10),
-      //     delegate: SliverChildListDelegate(List.generate(20, (index) {
-      //       return Container(
-      //         child: Column(
-      //           crossAxisAlignment: CrossAxisAlignment.stretch,
-      //           children: [
-      //             ClipRRect(
-      //               borderRadius: BorderRadius.circular(10),
-      //               child: Container(
-      //                 color: Colors.grey.withOpacity(0.3),
-      //                 height: 120,
-      //               ),
-      //             ),
-      //             const Text(
-      //               "상품 제목",
-      //               style: TextStyle(fontSize: 14),
-      //             ),
-      //             const Text(
-      //               "금액",
-      //               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-      //             ),
-      //           ],
-      //         ),
-      //       );
-      //     }).toList()),
-      //   ),
-      // ),
     ]);
   }
 
@@ -356,9 +315,10 @@ class _DetailContentViewState extends State<DetailContentView>
                   child: const Text(
                     "채팅으로 거래하기",
                     style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontSize: 16),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ],
