@@ -128,7 +128,6 @@ class _HomeState extends State<Home> {
 
   // currentLocation으로 판매, 구매, 대여 페이지 선택
   Future<List<Map<String, dynamic>>> _loadContents() async {
-    ContentsRepository().loadData();
     List<Map<String, dynamic>> responseData =
         await ContentsRepository().loadContentsFromLocation(currentLocation);
     return responseData;
@@ -139,24 +138,17 @@ class _HomeState extends State<Home> {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       itemBuilder: (BuildContext context, int index) {
+        if (datas[index]["image"].isEmpty) {
+          datas[index]["image"] = [
+            "https://png.pngtree.com/png-vector/20190820/ourlarge/pngtree-no-image-vector-illustration-isolated-png-image_1694547.jpg"
+          ];
+        }
         return GestureDetector(
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (BuildContext context) {
-                  datas[index]["id"];
-                  datas[index]["boardWriter"];
-                  datas[index]["boardTitle"];
-                  datas[index]["boardContents"];
-                  datas[index]["location"];
-                  datas[index]["price"];
-                  datas[index]["boardHits"];
-                  datas[index]["boardCreatedTime"];
-                  datas[index]["boardUpdatedTime"];
-                  datas[index]["boardCategory"];
-                  datas[index]["image"];
-                  //datas[index]["like"];
                   return DetailContentView(data: datas[index]);
                 },
               ),
@@ -170,10 +162,11 @@ class _HomeState extends State<Home> {
                   borderRadius: const BorderRadius.all(
                     Radius.circular(10),
                   ),
-                  child: Image.asset(
-                    UserInfo().defaultImage, //datas[index]["image"],
+                  child: Image.network(
+                    datas[index]["image"][0],
                     width: 100,
                     height: 100,
+                    scale: 0.1,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -266,12 +259,12 @@ class _HomeState extends State<Home> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return const Center(child: Text("데이터 오류"));
+            return const Center(child: Text("데이터를 불러올 수 없습니다."));
           }
           if (snapshot.hasData) {
             return _makeDataList(snapshot.data);
           }
-          return const Center(child: Text("해당 지역에 데이터가 없습니다."));
+          return const Center(child: Text("해당 거래방식에 대한 데이터가 없습니다."));
         });
   }
 

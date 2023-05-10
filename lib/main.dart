@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
-import 'package:test_project/page/control.dart';
+// ignore: unused_import
+import 'package:test_project/page/login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,12 +15,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "너도나도",
+      title: "너도나도도깨비",
       theme: ThemeData(
         primaryColor: Colors.white,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const Control(),
+      home: const LogIn(),
     );
   }
 }
