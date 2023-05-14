@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
-import 'package:test_project/page/control.dart';
-import 'package:test_project/page/home.dart';
 // ignore: unused_import
 import 'package:test_project/page/login.dart';
 
@@ -17,12 +15,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: "너도나도도깨비",
+      title: "STS",
       theme: ThemeData(
         primaryColor: Colors.white,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const Control(),
+      home: const LogIn(),
     );
   }
 }
