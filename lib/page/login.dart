@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test_project/page/control.dart';
 import 'package:http/http.dart' as http;
 
+import '../repository/contents_repository.dart';
+
 class LogIn extends StatefulWidget {
   const LogIn({super.key});
 
@@ -16,17 +18,20 @@ class _LogInState extends State<LogIn> {
   TextEditingController userId = TextEditingController();
   TextEditingController userPassword = TextEditingController();
   String? jwt;
+  Map<String, dynamic> payloadedJWT = {};
 
   // 앱내에 JWT 저장
   Future<void> saveJWT(String jwt, String userId) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      UserInfo.jwt = jwt;
+    });
     prefs.setString('jwt', jwt);
     prefs.setString('userId', userId);
   }
 
   Future<String?> getJWT() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    print(prefs.getString('jwt'));
     return prefs.getString('jwt');
   }
 
@@ -48,12 +53,12 @@ class _LogInState extends State<LogIn> {
     if (response.statusCode == 200) {
       final responseHeader = response.headers;
       if (responseHeader.isEmpty) {
-        print("responseBody is Empty");
+        throw Exception("responseBody is Empty");
       }
       setState(() {
-        jwt = responseHeader['authorization']!;
-        //print(response.headers);
-        print(jwt);
+        final getToken = responseHeader['authorization']!;
+        jwt = getToken.replaceFirst("Bearer ", "");
+        saveJWT(getToken.replaceFirst("Bearer ", ""), userId);
       });
       return jwt;
     } else {
@@ -70,21 +75,28 @@ class _LogInState extends State<LogIn> {
       password: userPassword.text,
     );
     if (jwt != null) {
-      saveJWT(jwt!, userId.text);
+      await _base64JWT();
     } else {
       jwt = null;
     }
   }
 
-  Future<void> _getTest() async {
-    var url = Uri.parse('https://ubuntu.i4624.tk/api/v1/user');
-    var response = await http.get(url);
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(utf8.decode(response.bodyBytes));
-      print(responseData);
-    } else {
-      throw Exception('Failed to get data');
+  Future<void> _base64JWT() async {
+    await getJWT();
+    List<String> jwtParts = jwt!.split('.');
+    String encodedPayload = jwtParts[1];
+    int mod4 = encodedPayload.length % 4;
+    if (mod4 > 0) {
+      encodedPayload += ('=' * (4 - mod4));
     }
+    String jsonString = utf8.decode(base64Url.decode(encodedPayload));
+    Map<String, dynamic> payloaded = json.decode(jsonString);
+    payloadedJWT = payloaded;
+    setState(() {
+      UserInfo.userId = payloadedJWT['username'];
+    });
+    print(UserInfo.jwt);
+    print(payloadedJWT);
   }
 
   PreferredSizeWidget _appbarWidget() {
@@ -234,7 +246,7 @@ class _LogInState extends State<LogIn> {
                                                 CrossAxisAlignment.center,
                                             children: const [
                                               Text(
-                                                "ID 또는 패스워드를 확인해주세요.",
+                                                "서버와의 통신이 불안정합니다.",
                                               ),
                                             ],
                                           ),
@@ -287,15 +299,9 @@ class _LogInState extends State<LogIn> {
             ),
             TextButton(
               onPressed: () {
-                getJWT();
+                _saveJWT();
               },
-              child: const Text("Get JWT"),
-            ),
-            TextButton(
-              onPressed: () {
-                print(jwt);
-              },
-              child: const Text("Result"),
+              child: const Text("테스트"),
             )
           ],
         ),
