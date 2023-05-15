@@ -144,6 +144,7 @@ class _WriteState extends State<Write> {
 
   // Send Data To Server
   Future _sendDataToServer(UserInfo user) async {
+    await _uploadImagesToServer(selectedFiles: _selectedFiles);
     await _saveData(userId: UserInfo.userId);
     final uri = Uri.parse('https://ubuntu.i4624.tk/api/v1/post');
     final headers = {
@@ -154,9 +155,10 @@ class _WriteState extends State<Write> {
       'title': title,
       'content': contents,
       'location': location,
-      'price': price.toString(),
+      'price': price,
       'writer': json.encode(user.toJson()),
-      'category': category
+      'category': category,
+      'list': imageData,
     });
     final response = await http
         .post(

@@ -101,6 +101,7 @@ class _MapViewState extends State<MapView> {
           ),
         ),
       );
+      print(jsonResult);
       setState(() {
         _locationData = null;
         _locationText = "($latitude, $longitude)";
@@ -272,7 +273,8 @@ class _MapViewState extends State<MapView> {
             border: InputBorder.none,
           ),
           onFieldSubmitted: (value) {
-            _direction15Test(value);
+            _goToAddress(value);
+            //_direction15Test(value);
           },
         ),
       ),
