@@ -133,6 +133,25 @@ class _HomeState extends State<Home> {
     return responseData;
   }
 
+  //수정 핋요 -> 이미지 로딩바 구현
+  Widget _loadingImageInterface(List<Map<String, dynamic>>? datas, index) {
+    return Image.network(
+      datas![index]["image"][0],
+      width: 100,
+      height: 100,
+      scale: 1,
+      fit: BoxFit.cover,
+      errorBuilder:
+          (BuildContext context, Object exception, StackTrace? stackTrace) {
+        return Image.asset(
+          "assets/images/No_image.jpg",
+          width: 100,
+          height: 100,
+        );
+      },
+    );
+  }
+
   Widget _makeDataList(List<Map<String, dynamic>>? datas) {
     int size = datas == null ? 0 : datas.length;
     return ListView.separated(
