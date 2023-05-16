@@ -39,7 +39,6 @@ class _HomeState extends State<Home> {
     return AppBar(
       title: GestureDetector(
         onTap: () {
-          print("click event");
           ContentsRepository().loadData();
         },
         child: PopupMenuButton<String>(
@@ -133,7 +132,8 @@ class _HomeState extends State<Home> {
     return responseData;
   }
 
-  //수정 핋요 -> 이미지 로딩바 구현
+  //수정 필요 -> 이미지 로딩바 구현
+  // ignore: unused_element
   Widget _loadingImageInterface(List<Map<String, dynamic>>? datas, index) {
     return Image.network(
       datas![index]["image"][0],
@@ -153,7 +153,7 @@ class _HomeState extends State<Home> {
   }
 
   Widget _makeDataList(List<Map<String, dynamic>>? datas) {
-    int size = datas == null ? 0 : datas.length;
+    //int size = datas == null ? 0 : datas.length;
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       itemBuilder: (BuildContext context, int index) {

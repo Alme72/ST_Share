@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:kakao_map_plugin/kakao_map_plugin.dart';
 // ignore: unused_import
 import 'package:test_project/page/login.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await NaverMapSdk.instance.initialize(clientId: 'v2v7x0th03');
+  AuthRepository.initialize(appKey: 'adeca8a5da950f64e0c27d3e89e9329b');
   runApp(const MyApp());
 }
 
