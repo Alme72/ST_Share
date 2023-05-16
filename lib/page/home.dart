@@ -39,7 +39,6 @@ class _HomeState extends State<Home> {
     return AppBar(
       title: GestureDetector(
         onTap: () {
-          print("click event");
           ContentsRepository().loadData();
         },
         child: PopupMenuButton<String>(
@@ -128,21 +127,38 @@ class _HomeState extends State<Home> {
 
   // currentLocation으로 판매, 구매, 대여 페이지 선택
   Future<List<Map<String, dynamic>>> _loadContents() async {
-    ContentsRepository().loadData();
     List<Map<String, dynamic>> responseData =
         await ContentsRepository().loadContentsFromLocation(currentLocation);
     return responseData;
   }
 
+  //수정 필요 -> 이미지 로딩바 구현
+  // ignore: unused_element
+  Widget _loadingImageInterface(List<Map<String, dynamic>>? datas, index) {
+    return Image.network(
+      datas![index]["image"][0],
+      width: 100,
+      height: 100,
+      scale: 1,
+      fit: BoxFit.cover,
+      errorBuilder:
+          (BuildContext context, Object exception, StackTrace? stackTrace) {
+        return Image.asset(
+          "assets/images/No_image.jpg",
+          width: 100,
+          height: 100,
+        );
+      },
+    );
+  }
+
   Widget _makeDataList(List<Map<String, dynamic>>? datas) {
-    int size = datas == null ? 0 : datas.length;
+    //int size = datas == null ? 0 : datas.length;
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       itemBuilder: (BuildContext context, int index) {
         if (datas[index]["image"].isEmpty) {
-          datas[index]["image"] = [
-            "https://png.pngtree.com/png-vector/20190820/ourlarge/pngtree-no-image-vector-illustration-isolated-png-image_1694547.jpg"
-          ];
+          datas[index]["image"] = ["assets/images/No_image.jpg"];
         }
         return GestureDetector(
           onTap: () {
@@ -150,18 +166,6 @@ class _HomeState extends State<Home> {
               context,
               MaterialPageRoute(
                 builder: (BuildContext context) {
-                  datas[index]["id"];
-                  datas[index]["boardWriter"];
-                  datas[index]["boardTitle"];
-                  datas[index]["boardContents"];
-                  datas[index]["location"];
-                  datas[index]["price"];
-                  datas[index]["boardHits"];
-                  datas[index]["boardCreatedTime"];
-                  datas[index]["boardUpdatedTime"];
-                  datas[index]["boardCategory"];
-                  datas[index]["image"];
-                  //datas[index]["like"];
                   return DetailContentView(data: datas[index]);
                 },
               ),
@@ -179,8 +183,16 @@ class _HomeState extends State<Home> {
                     datas[index]["image"][0],
                     width: 100,
                     height: 100,
-                    scale: 0.1,
+                    scale: 1,
                     fit: BoxFit.cover,
+                    errorBuilder: (BuildContext context, Object exception,
+                        StackTrace? stackTrace) {
+                      return Image.asset(
+                        "assets/images/No_image.jpg",
+                        width: 100,
+                        height: 100,
+                      );
+                    },
                   ),
                 ),
                 Expanded(
@@ -229,11 +241,6 @@ class _HomeState extends State<Home> {
                                 color: Color.fromARGB(255, 64, 64, 64),
                                 size: 17,
                               ),
-                              // SvgPicture.asset(
-                              //   "assets/svg/heart_off.svg",
-                              //   width: 13,
-                              //   height: 13,
-                              // ),
                               const SizedBox(
                                 width: 5,
                               ),
@@ -272,12 +279,12 @@ class _HomeState extends State<Home> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return const Center(child: Text("데이터 오류"));
+            return const Center(child: Text("데이터를 불러올 수 없습니다."));
           }
           if (snapshot.hasData) {
             return _makeDataList(snapshot.data);
           }
-          return const Center(child: Text("해당 지역에 데이터가 없습니다."));
+          return const Center(child: Text("해당 거래방식에 대한 데이터가 없습니다."));
         });
   }
 

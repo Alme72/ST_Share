@@ -1,8 +1,0 @@
-version: "Apple Swift version 5.8 (swiftlang-5.8.0.124.2 clang-1403.0.22.11.100)"
-options: "086ed3ec81d3e562dc84884148ca2bf95f014dac26be4ffc14ccc87aa1afb40f"
-build_start_time: [1681541172, 655672000]
-build_end_time: [1681541178, 253065000]
-inputs:
-  "/Users/alme/GitHub/ST_share/macos/Flutter/GeneratedPluginRegistrant.swift": [1681541166, 612545095]
-  "/Users/alme/GitHub/ST_share/macos/Runner/AppDelegate.swift": [1681540799, 496740134]
-  "/Users/alme/GitHub/ST_share/macos/Runner/MainFlutterWindow.swift": [1681540799, 498295257]
