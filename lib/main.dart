@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart';
+import 'package:test_project/page/control.dart';
 // ignore: unused_import
 import 'package:test_project/page/login.dart';
 
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.white,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const LogIn(),
+      home: const Control(),
     );
   }
 }
