@@ -1,4 +1,3 @@
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:test_project/page/home.dart';
 import '../repository/contents_repository.dart';
@@ -8,21 +7,23 @@ class DetailContentView extends StatefulWidget {
   DetailContentView({Key? key, required this.data}) : super(key: key);
 
   @override
-  _DetailContentViewState createState() => _DetailContentViewState();
+  State<DetailContentView> createState() => _DetailContentViewState();
 }
 
 class _DetailContentViewState extends State<DetailContentView>
     with TickerProviderStateMixin {
-  final ContentsRepository contentsRepository = ContentsRepository();
-  final scaffoldKey = GlobalKey<ScaffoldState>();
-  late Size size;
-
-  late List<String> imgList;
-  late int _current;
   ScrollController controller = ScrollController();
   double locationAlpha = 0;
+  final ContentsRepository contentsRepository = ContentsRepository();
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+  late List<String> imgList;
+  late Size size;
   late AnimationController _animationController;
   late Animation _colorTween;
+
+  late PageController _pageController;
+  int _currentPage = 0;
+  int _actualPage = 0;
 
   @override
   void initState() {
@@ -31,17 +32,23 @@ class _DetailContentViewState extends State<DetailContentView>
     _colorTween = ColorTween(begin: Colors.white, end: Colors.black)
         .animate(_animationController);
     imgList = widget.data["image"];
-    _current = 0;
+    _currentPage = 0;
     // _loadMyFavoriteContentState();
-    controller.addListener(() {
-      setState(() {
-        if (controller.offset > 255) {
-          locationAlpha = 255;
-        } else {
-          locationAlpha = controller.offset;
-        }
-        _animationController.value = locationAlpha / 255;
-      });
+    _pageController = PageController(
+      initialPage: _currentPage,
+      viewportFraction: 0.8, // 이미지 사이의 간격을 조절할 수 있습니다.
+    );
+    _pageController.addListener(() {
+      if (_pageController.page?.round() == widget.data['image'].length) {
+        setState(() {
+          _currentPage = 0;
+          _actualPage = 0;
+        });
+      } else {
+        setState(() {
+          _currentPage = _pageController.page!.round();
+        });
+      }
     });
   }
 
@@ -85,33 +92,35 @@ class _DetailContentViewState extends State<DetailContentView>
     return SizedBox(
       height: size.width * 0.8,
       child: Stack(
+        alignment: Alignment.bottomRight,
         children: [
-          Hero(
-            tag: widget.data["id"],
-            child: CarouselSlider(
-              options: CarouselOptions(
-                  height: size.width * 0.8,
-                  initialPage: 0,
-                  enableInfiniteScroll: true,
-                  viewportFraction: 1,
-                  enlargeCenterPage: false,
-                  onPageChanged: (index, reason) {
-                    setState(() {
-                      _current = index;
-                    });
-                  }),
-              items: imgList.map((i) {
-                return SizedBox(
-                  width: size.width,
-                  height: size.width,
-                  child: Image.network(
-                    widget.data["image"][_current],
-                    width: double.infinity,
-                    scale: 0.1,
-                    fit: BoxFit.cover,
-                  ),
-                );
-              }).toList(),
+          PageView.builder(
+            itemCount: widget.data["image"].length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Image.network(
+                  widget.data["image"][index],
+                  fit: BoxFit.cover,
+                ),
+              );
+            },
+            //enableInfiniteScroll: true,
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+            margin: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(500)),
+            child: Text(
+              '${_currentPage + 1}/${widget.data["image"].length}',
+              style: const TextStyle(color: Colors.white),
             ),
           ),
           Positioned(
@@ -120,21 +129,23 @@ class _DetailContentViewState extends State<DetailContentView>
             right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(imgList.length, (index) {
+              children: List.generate(widget.data['image'].length, (index) {
                 return Container(
                   width: 8.0,
                   height: 8.0,
                   margin: const EdgeInsets.symmetric(
-                      vertical: 10.0, horizontal: 5.0),
+                    vertical: 10.0,
+                    horizontal: 5.0,
+                  ),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _current == index
+                    color: _currentPage == index
                         ? Colors.black //Colors.white
                         : Colors.grey
                             .withOpacity(0.4), //Colors.white.withOpacity(0.4),
                   ),
                 );
-              }).toList(),
+              }),
             ),
           )
         ],
