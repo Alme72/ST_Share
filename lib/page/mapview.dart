@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:snapping_sheet/snapping_sheet.dart';
 
 class MapView extends StatefulWidget {
@@ -60,7 +61,6 @@ class _MapViewState extends State<MapView> {
     final route = documents.first['route'] as Map<String, dynamic>;
     final traoptimal = route['traoptimal'] as List<dynamic>;
     final path = traoptimal.first['path'] as List<dynamic>;
-
     setState(() {
       _routeCoordinates = path.map<LatLng>((point) {
         final x = point['x'];
@@ -68,10 +68,26 @@ class _MapViewState extends State<MapView> {
         return LatLng(y, x);
       }).toList();
     });
-
     _mapController.addPolyline();
+//   _mapController.addPolyline(Polyline(
+//   polylineId: const PolylineId('route'),
+//   points: _routeCoordinates,
+//   color: Colors.blue,
+//   width: 3,
+// ));
+    // 수정: _mapController -> mapController
   }
-  //
+
+  Future<bool> permission() async {
+    Map<Permission, PermissionStatus> status =
+        await [Permission.location].request(); // [] 권한배열에 권한을 작성
+
+    if (await Permission.location.isGranted) {
+      return Future.value(true);
+    } else {
+      return Future.value(false);
+    }
+  }
 
   PreferredSizeWidget _appbarWidget() {
     return AppBar(
@@ -150,6 +166,15 @@ class _MapViewState extends State<MapView> {
         onMapCreated: ((controller) {
           mapController = controller;
         }),
+        polylines: const <Polyline>[
+          // Polyline(
+          //   polylineId: ,
+          //   points: _routeCoordinates, // 수정: _routeCoordinates -> routeCoordinates
+          //   fillColor: Colors.blue,
+          //   strokeColor: Colors.blue,
+          //   strokeWidth: 3,
+          // ),
+        ],
       ),
     );
   }
@@ -163,7 +188,7 @@ class _MapViewState extends State<MapView> {
     return Scaffold(
       appBar: _appbarWidget(),
       extendBodyBehindAppBar: true,
-      body: _bodyWidget(), //_bodyWidget(),
+      body: _bodyWidget(),
     );
   }
 }
