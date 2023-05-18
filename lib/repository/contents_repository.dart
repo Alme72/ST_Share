@@ -1,11 +1,20 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserInfo {
   static late String userId;
-  late String userNickName = "DefaultName";
+  late String name = "홍길동";
   late String password;
+  static late String jwt;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'username': userId,
+      //'name': name,
+    };
+  }
 }
 
 class ContentsRepository {
@@ -15,7 +24,7 @@ class ContentsRepository {
       {
         "id": 14,
         "image": [
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
+          "https://ubuntu.i4624.tk/image/imageid/100042",
           "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
           "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
         ],
@@ -211,6 +220,128 @@ class ContentsRepository {
     ],
   };
   //String serverURL = "https://ubuntu.i4624.tk/image/imageid/";
+
+  List<Map<String, dynamic>> tempData = [
+    {
+      "id": 14,
+      "image": [100085, 100086, 100087],
+      "boardWriter": "22",
+      "boardTitle": "22",
+      "boardContents": "22",
+      "location": "서울",
+      "price": 20000,
+      "boardHits": 2,
+      "boardCreatedTime": "2023-03-24T18:31:47.576233",
+      "boardUpdatedTime": "2023-03-31T09:25:00",
+      "boardCategory": "sell",
+      "productCategory": "",
+    },
+    {
+      "id": 15,
+      "image": [100085, 100086, 100087],
+      "boardWriter": "test123",
+      "boardTitle": "안녕하세요",
+      "boardContents": "ㅇㅇㅇ",
+      "location": "강남",
+      "price": 25000,
+      "boardHits": 7,
+      "boardCreatedTime": "2023-03-28T19:32:48.417641",
+      "boardUpdatedTime": "2023-03-31T09:25:00",
+      "boardCategory": "sell",
+    },
+    {
+      "id": 16,
+      "image": [100085, 100086, 100087],
+      "boardWriter": "input",
+      "boardTitle": "test",
+      "boardContents": "슈퍼 해머드릴",
+      "location": "부천시 경인로",
+      "price": 120000,
+      "boardHits": 10,
+      "boardCreatedTime": "2023-03-28T10:59:10.492566",
+      "boardUpdatedTime": "2023-03-31T09:25:00",
+      "boardCategory": "sell",
+    },
+    {
+      "id": 14,
+      "image": [100085, 100086, 100087],
+      "boardWriter": "22",
+      "boardTitle": "22",
+      "boardContents": "22",
+      "location": "서울",
+      "price": 20000,
+      "boardHits": 2,
+      "boardCreatedTime": "2023-03-24T18:31:47.576233",
+      "boardUpdatedTime": "2023-03-31T09:25:00",
+      "boardCategory": "buy",
+    },
+    {
+      "id": 15,
+      "image": [100085, 100086, 100087],
+      "boardWriter": "test123",
+      "boardTitle": "안녕하세요",
+      "boardContents": "ㅇㅇㅇ",
+      "location": "강남",
+      "price": 25000,
+      "boardHits": 7,
+      "boardCreatedTime": "2023-03-28T19:32:48.417641",
+      "boardUpdatedTime": "2023-03-31T09:25:00",
+      "boardCategory": "buy",
+    },
+    {
+      "id": 16,
+      "image": [100085, 100086, 100087],
+      "boardWriter": "input",
+      "boardTitle": "test",
+      "boardContents": "슈퍼 해머드릴",
+      "location": "부천시 경인로",
+      "price": 120000,
+      "boardHits": 10,
+      "boardCreatedTime": "2023-03-28T10:59:10.492566",
+      "boardUpdatedTime": "2023-03-31T09:25:00",
+      "boardCategory": "buy",
+    },
+    {
+      "id": 14,
+      "image": [100085, 100086, 100087],
+      "boardWriter": "22",
+      "boardTitle": "22",
+      "boardContents": "22",
+      "location": "서울",
+      "price": 20000,
+      "boardHits": 2,
+      "boardCreatedTime": "2023-03-24T18:31:47.576233",
+      "boardUpdatedTime": "2023-03-31T09:25:00",
+      "boardCategory": "rental",
+    },
+    {
+      "id": 15,
+      "image": [100085, 100086, 100087],
+      "boardWriter": "test123",
+      "boardTitle": "안녕하세요",
+      "boardContents": "ㅇㅇㅇ",
+      "location": "강남",
+      "price": 25000,
+      "boardHits": 7,
+      "boardCreatedTime": "2023-03-28T19:32:48.417641",
+      "boardUpdatedTime": "2023-03-31T09:25:00",
+      "boardCategory": "rental",
+    },
+    {
+      "id": 16,
+      "image": [100085, 100086, 100087],
+      "boardWriter": "input",
+      "boardTitle": "test",
+      "boardContents": "슈퍼 해머드릴",
+      "location": "부천시 경인로",
+      "price": 120000,
+      "boardHits": 10,
+      "boardCreatedTime": "2023-03-28T10:59:10.492566",
+      "boardUpdatedTime": "2023-03-31T09:25:00",
+      "boardCategory": "rental",
+    }
+  ];
+
   void jsonToData() {
     for (var i = 0; i < data.length; i++) {
       var item = data[i];
@@ -223,16 +354,27 @@ class ContentsRepository {
     }
   }
 
+  Future<String?> getJWT() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt');
+  }
+
   Future<List<Map<String, dynamic>>> loadData() async {
-    var url = Uri.parse('https://ubuntu.i4624.tk/boardapi/boardlist');
-    var response = await http.get(url);
+    var uri = Uri.parse('https://ubuntu.i4624.tk/api/v1/post/list');
+    final headers = {'Authorization': 'Bearer ${getJWT()}'};
+    final response = await http
+        .post(
+          uri,
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 5));
     if (response.statusCode == 200) {
       final List<dynamic> responseData =
           jsonDecode(utf8.decode(response.bodyBytes));
       data = responseData
           .map((dynamic item) => Map<String, dynamic>.from(item))
           .toList();
-      //jsonToData();
+      jsonToData();
       return data;
     } else {
       throw Exception('Failed to load data');

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test_project/page/control.dart';
 import 'package:test_project/repository/contents_repository.dart';
 
@@ -54,7 +53,7 @@ class _WriteState extends State<Write> {
   };
 
   // 거래방식 선택
-  final Map<String, dynamic> categoryOptionsTypeToString = {
+  final Map<String, dynamic> boardCategoryOptionsTypeToString = {
     "default": "거래방식",
     "sell": "판매",
     "buy": "구매",
@@ -62,9 +61,9 @@ class _WriteState extends State<Write> {
   };
 
   // textfield에서 입력받은 데이터를 변수에 저장하는 함수
-  Future<void> _saveData() async {
+  Future<void> _saveData({required String userId}) async {
     userId = userId;
-    userNickName = UserInfo().userNickName;
+    userNickName = UserInfo().name;
     title = _titleController.text;
     contents = _contentsController.text; // 카테고리
     productCategory = productCategoryCurrentLocation;
@@ -93,7 +92,8 @@ class _WriteState extends State<Write> {
     print("Image List length: ${_selectedFiles.length.toString()}");
   }
 
-// 이미지를 서버에 전송
+  List<Map<String, dynamic>> imageData = [];
+  List<dynamic> imageJsonData = [];
   Future _uploadImagesToServer({
     required List<XFile> selectedFiles,
   }) async {
@@ -103,109 +103,77 @@ class _WriteState extends State<Write> {
       request.files.add(
         await http.MultipartFile.fromPath('filename', selectedFile.path),
       );
-      request.fields['user'] = userId;
+      request.fields['user'] = UserInfo.userId;
     }
     final response = await request.send();
     if (response.statusCode == 200) {
-      final responseBody = await response.stream.bytesToString();
-      final jsonResponse = json.decode(responseBody);
-      setState(() {
-        _uploadedImageUrl = jsonResponse['imageUrl'];
-      });
-      await _getImageIdData(); // _getImageIdData() 실행
+      await _updateImageData();
     } else {
       throw Exception('Failed to send images');
     }
   }
 
-  List<dynamic> imageJsonData = [];
-  Future<List<Map<String, dynamic>>> _getImageIdData() async {
+  Future<void> _updateImageData() async {
+    imageJsonData = await _getImageIdData();
+    imageData = _convertImageJsonData(imageJsonData);
+  }
+
+  Future<List<dynamic>> _getImageIdData() async {
     var url = Uri.parse(
-        'https://ubuntu.i4624.tk/image/sql/recent/$userId/${_selectedFiles.length}');
-    //'https://ubuntu.i4624.tk/image/sql/recent/$userId/${_selectedFiles.length}');
+        'https://ubuntu.i4624.tk/image/sql/recent/${UserInfo.userId}/${_selectedFiles.length}');
     var response = await http.get(url);
     if (response.statusCode == 200) {
       final List<dynamic> responseData =
           jsonDecode(utf8.decode(response.bodyBytes));
       imageJsonData = responseData;
-
-      return _convertImageJsonData(imageJsonData); // _convertImageJsonData() 실행
+      return imageJsonData;
     } else {
       throw Exception('Failed to get image data');
     }
   }
 
-  List<Map<String, dynamic>> imageData = [];
-  Future<List<Map<String, dynamic>>> _convertImageJsonData(
-      List<dynamic> imageJsonData) async {
-    imageData = imageJsonData
+  List<Map<String, dynamic>> _convertImageJsonData(
+      List<dynamic> imageJsonData) {
+    return imageJsonData
         .map<Map<String, dynamic>>((data) => {
-              'imageUid': data[0].toString(), // int -> String으로 변경
+              'imageUid': data[0].toString(),
               'imageName': data[1] as String,
             })
         .toList();
-    return imageData;
   }
 
   // Send Data To Server
-  Future _sendDataToServer({
-    //required List<Map<String, dynamic>> imageData,
-    required String userNickName,
-    required String title,
-    required String contents,
-    required String category,
-    required String location,
-    required int price,
-  }) async {
+  Future _sendDataToServer(UserInfo user) async {
+    await _uploadImagesToServer(selectedFiles: _selectedFiles);
+    await _saveData(userId: UserInfo.userId);
     final uri = Uri.parse('https://ubuntu.i4624.tk/api/v1/post');
-    final request = http.MultipartRequest('POST', uri);
-    // final headers = {'Content-Type': 'application/json'};
-    // final body = jsonEncode({
-    //   'writer': userNickName,
-    //   'title': title,
-    //   'contents': contents,
-    //   'location':location,
-    //   'price':price.toString()
-    // });
-    // final response = await http
-    //     .post(
-    //       uri,
-    //       headers: headers,
-    //       body: body,
-    //     )
-    //     .timeout(const Duration(seconds: 5));
-    //request.fields['userId'] = userId;
-    // for (final image in imageData) {
-    //   request.fields['imageUID'] = image['imageUid'].toString();
-    //   //request.fields['imageName[]'] = image['imageName'];
-    // }
-    request.fields['writer'] = userNickName;
-    request.fields['title'] = title;
-    request.fields['contents'] = contents;
-    request.fields['location'] = location;
-    request.fields['price'] = price.toString();
-    //request.fields['boardCategory'] = category;
-    final response = await request.send();
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ${UserInfo.jwt}'
+    };
+    final body = jsonEncode({
+      'title': title,
+      'content': contents,
+      'location': location,
+      'price': price,
+      'writer': json.encode(user.toJson()),
+      'category': category,
+      'list': imageData,
+    });
+    final response = await http
+        .post(
+          uri,
+          headers: headers,
+          body: body,
+        )
+        .timeout(const Duration(seconds: 5));
     if (response.statusCode == 200) {
-      final responseBody = await response.stream.bytesToString();
-      final jsonResponse = json.decode(responseBody);
-      setState(() {
-        print(jsonResponse);
-      });
+      print(response.statusCode);
     } else {
+      print(response.statusCode);
       print(response.reasonPhrase);
       throw Exception('Failed to send total data');
     }
-  }
-
-  Future<String?> getUserId() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    userId = prefs.getString('userId')!;
-    setState(() {
-      UserInfo.userId = userId;
-    });
-    print(UserInfo.userId);
-    return userId;
   }
 
   // Appbar Widget
@@ -551,19 +519,7 @@ class _WriteState extends State<Write> {
               // }
               // 모든 정보가 입력되었을 때
               else {
-                // _uploadImagesToServer(selectedFiles: _selectedFiles);
-                // _getImageIdData();
-                // _convertImageJsonData(imageJsonData);
-                _saveData();
-                _sendDataToServer(
-                  userNickName: UserInfo().userNickName,
-                  //imageData: imageData,
-                  title: title,
-                  contents: contents,
-                  category: category,
-                  location: location,
-                  price: price,
-                );
+                _sendDataToServer(UserInfo());
                 print("데이터 전송");
                 Navigator.pop(context);
                 Navigator.push(
@@ -639,7 +595,7 @@ class _WriteState extends State<Write> {
                           children: [
                             //앱 내에서 좌측 상단바 출력을 위한 데이터
                             Text(
-                              categoryOptionsTypeToString[
+                              boardCategoryOptionsTypeToString[
                                   categoryCurrentLocation]!,
                               style: const TextStyle(
                                 color: Colors.black,
@@ -854,15 +810,6 @@ class _WriteState extends State<Write> {
               children: [
                 TextButton(
                   onPressed: () {
-                    print("Save UserId");
-                    //getUserId();
-                    //print(imageJsonData);
-                    print(UserInfo.userId);
-                  },
-                  child: const Text("Save UserId"),
-                ),
-                TextButton(
-                  onPressed: () {
                     print("Send Image");
                     _uploadImagesToServer(
                       selectedFiles: _selectedFiles,
@@ -877,14 +824,6 @@ class _WriteState extends State<Write> {
               children: [
                 TextButton(
                   onPressed: () {
-                    print("Get ImageData");
-                    _getImageIdData();
-                    //print(imageJsonData);
-                  },
-                  child: const Text("Get ImageData"),
-                ),
-                TextButton(
-                  onPressed: () {
                     print("Print imageJsonData");
                     print(imageJsonData);
                   },
@@ -896,23 +835,8 @@ class _WriteState extends State<Write> {
               children: [
                 TextButton(
                   onPressed: () {
-                    print("Convert ImageData");
-                    _convertImageJsonData(imageJsonData);
-                  },
-                  child: const Text("Convert ImageData"),
-                ),
-                TextButton(
-                  onPressed: () {
                     print("Print ImageData");
                     print(imageData);
-                  },
-                  child: const Text("Print ImageData"),
-                ),
-                TextButton(
-                  onPressed: () {
-                    print("Total Test");
-                    //_getImageIdData();
-                    _convertImageJsonData(imageJsonData);
                   },
                   child: const Text("Print ImageData"),
                 ),
@@ -940,7 +864,6 @@ class _WriteState extends State<Write> {
         onPressed: () {
           print('이미지 추가');
           _selectImages();
-          //_selectImage();
         },
         tooltip: 'Increment',
         backgroundColor: const Color.fromARGB(255, 200, 200, 200),

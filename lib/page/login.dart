@@ -18,28 +18,21 @@ class _LogInState extends State<LogIn> {
   TextEditingController userId = TextEditingController();
   TextEditingController userPassword = TextEditingController();
   String? jwt;
-  //List<Map<String, dynamic>> temp = [];
+  Map<String, dynamic> payloadedJWT = {};
 
   // 앱내에 JWT 저장
   Future<void> saveJWT(String jwt, String userId) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      UserInfo.jwt = jwt;
+    });
     prefs.setString('jwt', jwt);
     prefs.setString('userId', userId);
   }
 
   Future<String?> getJWT() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    print(prefs.getString('jwt'));
     return prefs.getString('jwt');
-  }
-
-  Future<String?> getUserId() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    String userId = prefs.getString('userId')!;
-    setState(() {
-      UserInfo.userId = userId;
-    });
-    return UserInfo.userId;
   }
 
   Future<String?> _sendDataToServer({
@@ -60,12 +53,12 @@ class _LogInState extends State<LogIn> {
     if (response.statusCode == 200) {
       final responseHeader = response.headers;
       if (responseHeader.isEmpty) {
-        print("responseBody is Empty");
+        throw Exception("responseBody is Empty");
       }
       setState(() {
         final getToken = responseHeader['authorization']!;
         jwt = getToken.replaceFirst("Bearer ", "");
-        print(jwt);
+        saveJWT(getToken.replaceFirst("Bearer ", ""), userId);
       });
       return jwt;
     } else {
@@ -82,19 +75,28 @@ class _LogInState extends State<LogIn> {
       password: userPassword.text,
     );
     if (jwt != null) {
-      saveJWT(jwt!, userId.text);
-      getUserId();
+      await _base64JWT();
     } else {
       jwt = null;
     }
   }
 
-  Future<void> _base64Test() async {
+  Future<void> _base64JWT() async {
     await getJWT();
-    List<String> tokenParts = jwt!.split('.');
-    //List<int> decodedBytes = base64.decode(base64EncodedData);
-    String decodedString = utf8.decode(base64Url.decode(tokenParts[1]));
-    print(decodedString);
+    List<String> jwtParts = jwt!.split('.');
+    String encodedPayload = jwtParts[1];
+    int mod4 = encodedPayload.length % 4;
+    if (mod4 > 0) {
+      encodedPayload += ('=' * (4 - mod4));
+    }
+    String jsonString = utf8.decode(base64Url.decode(encodedPayload));
+    Map<String, dynamic> payloaded = json.decode(jsonString);
+    payloadedJWT = payloaded;
+    setState(() {
+      UserInfo.userId = payloadedJWT['username'];
+    });
+    print(UserInfo.jwt);
+    print(payloadedJWT);
   }
 
   PreferredSizeWidget _appbarWidget() {
@@ -298,7 +300,6 @@ class _LogInState extends State<LogIn> {
             TextButton(
               onPressed: () {
                 _saveJWT();
-                _base64Test();
               },
               child: const Text("테스트"),
             )
