@@ -63,12 +63,12 @@ class _MapViewState extends State<MapView> {
       NMarker(id: '1', position: const NLatLng(37.5666102, 126.9783881));
   //final marker2 = NMarker(id: '2', position: NLatLng(latitude, longitude));
 
-  late List marker = [];
-  void makeMaker() {
-    for (int i = 0; i < ContentsRepository().datas.length; i++) {
-      marker[i] = ContentsRepository().datas[i]["image"];
-    }
-  }
+  // late List marker = [];
+  // void makeMaker() {
+  //   for (int i = 0; i < ContentsRepository().datas.length; i++) {
+  //     marker[i] = ContentsRepository().datas[i]["imageList"];
+  //   }
+  // }
 
   Future<void> _getCurrentLocation() async {
     final position = await Geolocator.getCurrentPosition();
