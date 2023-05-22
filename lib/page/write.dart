@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:test_project/page/control.dart';
 import 'package:test_project/repository/contents_repository.dart';
+import 'package:kpostal/kpostal.dart';
 
 class Write extends StatefulWidget {
   const Write({super.key});
@@ -46,7 +47,7 @@ class _WriteState extends State<Write> {
   // 카테고리 선택
   final Map<String, dynamic> productCategoryOptionsTypeToString = {
     "default": "카테고리",
-    "electronics": "디지털/가전",
+    "electronics": "디지털/전자",
     "tools": "공구",
     "clothes": "의류",
     "others": "기타"
@@ -135,17 +136,24 @@ class _WriteState extends State<Write> {
   List<Map<String, dynamic>> _convertImageJsonData(
       List<dynamic> imageJsonData) {
     return imageJsonData
-        .map<Map<String, dynamic>>((data) => {
-              'imageUid': data[0].toString(),
-              'imageName': data[1] as String,
+        .map<Map<String, int>>((data) => {
+              'imageUid': data[0],
             })
         .toList();
   }
 
   // Send Data To Server
-  Future _sendDataToServer(UserInfo user) async {
+  Future _sendDataToServer({
+    required UserInfo user,
+    required String userId,
+    required String title,
+    required String contents, // 카테고리
+    required String productCategory,
+    required String category, //거래방식
+    required String location,
+    required int price,
+  }) async {
     await _uploadImagesToServer(selectedFiles: _selectedFiles);
-    await _saveData(userId: UserInfo.userId);
     final uri = Uri.parse('https://ubuntu.i4624.tk/api/v1/post');
     final headers = {
       'Content-Type': 'application/json',
@@ -158,7 +166,10 @@ class _WriteState extends State<Write> {
       'price': price,
       'writer': json.encode(user.toJson()),
       'category': category,
-      'list': imageData,
+      'imageIds':
+          imageData.map<int>((item) => item['imageUid'] as int).toList(),
+      'boardCategory': category,
+      'itemCategory': productCategory,
     });
     final response = await http
         .post(
@@ -519,7 +530,16 @@ class _WriteState extends State<Write> {
               // }
               // 모든 정보가 입력되었을 때
               else {
-                _sendDataToServer(UserInfo());
+                _sendDataToServer(
+                    user: UserInfo(),
+                    userId: UserInfo.userId,
+                    title: _titleController.text,
+                    contents: _contentsController.text,
+                    productCategory: productCategoryCurrentLocation,
+                    category: categoryCurrentLocation,
+                    location: _locationController.text,
+                    price:
+                        int.parse(_priceController.text.replaceAll(',', '')));
                 print("데이터 전송");
                 Navigator.pop(context);
                 Navigator.push(
@@ -635,7 +655,7 @@ class _WriteState extends State<Write> {
                         return [
                           const PopupMenuItem(
                             value: "electronics",
-                            child: Text("디지털/가전"),
+                            child: Text("디지털/전자"),
                           ),
                           const PopupMenuItem(
                             value: "tools",
@@ -700,25 +720,25 @@ class _WriteState extends State<Write> {
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
               child: TextField(
                 controller: _locationController,
-                //readOnly: true,
-                // onTap: () async {
-                //   await Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder: (_) => KpostalView(
-                //         callback: (Kpostal result) {
-                //           print(result.address);
-                //           setState(() {
-                //             location =
-                //                 result.address; // 주소를 선택하면 해당 값을 상태 변수에 저장
-                //             _locationController.text =
-                //                 location; // 상태 변수의 값을 TextField에 출력
-                //           });
-                //         },
-                //       ),
-                //     ),
-                //   );
-                // },
+                readOnly: true,
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => KpostalView(
+                        callback: (Kpostal result) {
+                          print(result.address);
+                          setState(() {
+                            location =
+                                result.address; // 주소를 선택하면 해당 값을 상태 변수에 저장
+                            _locationController.text =
+                                location; // 상태 변수의 값을 TextField에 출력
+                          });
+                        },
+                      ),
+                    ),
+                  );
+                },
                 decoration: const InputDecoration(
                   enabledBorder: UnderlineInputBorder(),
                   isDense: true,
@@ -805,42 +825,6 @@ class _WriteState extends State<Write> {
                         ))
                     .toList(),
               ),
-            ),
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () {
-                    print("Send Image");
-                    _uploadImagesToServer(
-                      selectedFiles: _selectedFiles,
-                    );
-                    //print(imageJsonData);
-                  },
-                  child: const Text("Send Image"),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () {
-                    print("Print imageJsonData");
-                    print(imageJsonData);
-                  },
-                  child: const Text("Print imageJsonData"),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () {
-                    print("Print ImageData");
-                    print(imageData);
-                  },
-                  child: const Text("Print ImageData"),
-                ),
-              ],
             ),
           ],
         );
