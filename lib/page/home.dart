@@ -157,9 +157,7 @@ class _HomeState extends State<Home> {
       padding: const EdgeInsets.symmetric(horizontal: 10),
       itemBuilder: (BuildContext context, int index) {
         if (datas[index]["imageList"].isEmpty) {
-          datas[index]["imageList"] = [
-            "https://storyset.com/illustration/oops-404-error-with-a-broken-robot/rafiki"
-          ];
+          datas[index]["imageList"] = [""];
         }
         return GestureDetector(
           onTap: () {
@@ -181,7 +179,18 @@ class _HomeState extends State<Home> {
                   borderRadius: const BorderRadius.all(
                     Radius.circular(10),
                   ),
-                  child: Image.network(
+                  child:
+                      // CachedNetworkImage(
+                      //   width: 100,
+                      //   height: 100,
+                      //   imageUrl: datas[index]["imageList"][0],
+                      //   // placeholder: Image.asset(
+                      //   //   "assets/images/No_image.jpg",
+                      //   // ),
+                      //   errorWidget: (context, url, error) =>
+                      //       const Icon(Icons.error),
+                      // ),
+                      Image.network(
                     datas[index]["imageList"][0],
                     width: 100,
                     height: 100,
@@ -193,6 +202,19 @@ class _HomeState extends State<Home> {
                         "assets/images/No_image.jpg",
                         width: 100,
                         height: 100,
+                      );
+                    },
+                    loadingBuilder: (BuildContext context, Widget child,
+                        ImageChunkEvent? loadingProgress) {
+                      if (loadingProgress == null) {
+                        return child;
+                      }
+                      return Image.asset(
+                        'assets/images/loading_placeholder.gif',
+                        width: 100,
+                        height: 100,
+                        scale: 1,
+                        fit: BoxFit.cover, // 로딩 중에 표시할 위젯
                       );
                     },
                   ),

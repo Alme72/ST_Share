@@ -249,7 +249,7 @@ class _LogInState extends State<LogIn> {
                                               CrossAxisAlignment.center,
                                           children: const [
                                             Text(
-                                              "서버와의 통신이 불안정합니다.",
+                                              "아이디와 비밀번호를 확인해주세요.",
                                             ),
                                           ],
                                         ),
