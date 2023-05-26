@@ -61,18 +61,6 @@ class _WriteState extends State<Write> {
     "rental": "대여",
   };
 
-  // textfield에서 입력받은 데이터를 변수에 저장하는 함수
-  Future<void> _saveData({required String userId}) async {
-    userId = userId;
-    userNickName = UserInfo().name;
-    title = _titleController.text;
-    contents = _contentsController.text; // 카테고리
-    productCategory = productCategoryCurrentLocation;
-    category = categoryCurrentLocation; //거래방식
-    location = _locationController.text;
-    price = int.parse(_priceController.text.replaceAll(',', ''));
-  }
-
   // 사용자의 다수의 image를 받기위한 생성자
   final ImagePicker _picker = ImagePicker();
   Future<void> _selectImages() async {
@@ -84,13 +72,14 @@ class _WriteState extends State<Write> {
         if (selectedImages.isNotEmpty) {
           _selectedFiles.addAll(selectedImages);
         } else {
-          print('no image select');
+          //print('no image select');
         }
       });
     } catch (e) {
-      print(e);
+      //print(e);
+      throw Exception(e);
     }
-    print("Image List length: ${_selectedFiles.length.toString()}");
+    //print("Image List length: ${_selectedFiles.length.toString()}");
   }
 
   List<Map<String, dynamic>> imageData = [];
@@ -179,10 +168,10 @@ class _WriteState extends State<Write> {
         )
         .timeout(const Duration(seconds: 5));
     if (response.statusCode == 200) {
-      print(response.statusCode);
+      //print(response.statusCode);
     } else {
-      print(response.statusCode);
-      print(response.reasonPhrase);
+      // print(response.statusCode);
+      // print(response.reasonPhrase);
       throw Exception('Failed to send total data');
     }
   }
@@ -540,7 +529,7 @@ class _WriteState extends State<Write> {
                     location: _locationController.text,
                     price:
                         int.parse(_priceController.text.replaceAll(',', '')));
-                print("데이터 전송");
+                //print("데이터 전송");
                 Navigator.pop(context);
                 Navigator.push(
                   context,
@@ -576,9 +565,7 @@ class _WriteState extends State<Write> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(40, 20, 0, 10),
                   child: GestureDetector(
-                    onTap: () {
-                      print("click event");
-                    },
+                    onTap: () {},
                     child: PopupMenuButton<String>(
                       offset: const Offset(0, 30),
                       shape: ShapeBorder.lerp(
@@ -727,7 +714,7 @@ class _WriteState extends State<Write> {
                     MaterialPageRoute(
                       builder: (_) => KpostalView(
                         callback: (Kpostal result) {
-                          print(result.address);
+                          //print(result.address);
                           setState(() {
                             location =
                                 result.address; // 주소를 선택하면 해당 값을 상태 변수에 저장
@@ -846,7 +833,6 @@ class _WriteState extends State<Write> {
       body: _makeTextArea(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          print('이미지 추가');
           _selectImages();
         },
         tooltip: 'Increment',
