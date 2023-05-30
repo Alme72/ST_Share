@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class UserInfo {
   static late String userId;
-  late String name = "홍길동";
+  //late String name = "홍길동";
   late String password;
   static late String jwt;
 
@@ -54,7 +54,7 @@ class ContentsRepository {
     try {
       originBoardDatas = await loadData();
       convertData(originBoardDatas);
-      print(originBoardDatas);
+      //print(originBoardDatas);
       print(mainBoardDatas);
     } catch (e) {
       print('Failed to load data: $e');
@@ -62,7 +62,7 @@ class ContentsRepository {
     return originBoardDatas;
   }
 
-  // datas를 mainDatas로 변환시키는 함수
+// datas를 mainDatas로 변환시키는 함수
   Map<String, List<Map<String, dynamic>>> convertData(
       Map<String, dynamic> datas) {
     List<Map<String, dynamic>> postResponses =
@@ -70,13 +70,13 @@ class ContentsRepository {
     postResponses.sort((a, b) => b['postid'].compareTo(a['postid']));
 
     for (var data in postResponses) {
-      //datas['postResponses']) {
       var category = data['boardCategory'];
       var productCategory = data['itemCategory'];
       var imageList = data['imageList'];
-      // 변환된 productCategory 값에 따라 카테고리를 설정
       var convertedProductCategory = '';
       var content = '';
+
+      // 변환된 productCategory 값에 따라 카테고리를 설정
       if (productCategory == 'electronics') {
         convertedProductCategory = '디지털/전자';
       } else if (productCategory == 'tools') {
@@ -88,15 +88,24 @@ class ContentsRepository {
       } else {
         convertedProductCategory = data['itemCategory'];
       }
+
       var imageUrls = imageList
           .map((imageId) =>
               'https://ubuntu.i4624.tk/image/imageid/${imageId['urid']}')
           .toList();
+
       if (data['content'] == null) {
         content = '내용이 없음';
       } else {
         content = data['content'];
       }
+
+      var phoneNumber = data['phone'] as String;
+      phoneNumber = phoneNumber
+          .replaceFirstMapped(RegExp(r'^(\d{3})(\d{4})(\d{4})$'), (match) {
+        return '${match[1]}-${match[2]}-${match[3]}';
+      });
+
       var convertedData = {
         'postId': data['postid'],
         'username': data['username'],
@@ -106,15 +115,16 @@ class ContentsRepository {
         'content': content,
         'imageList': imageUrls,
         'itemCategory': convertedProductCategory,
-        'phoneNum': datas['phone'],
+        'phoneNum': phoneNumber,
       };
+
       if (mainBoardDatas.containsKey(category)) {
         mainBoardDatas[category]!.add(convertedData);
       } else {
         mainBoardDatas[category] = [convertedData];
       }
     }
-    print(datas['imageList']);
+
     return mainBoardDatas;
   }
 

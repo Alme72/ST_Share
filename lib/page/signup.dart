@@ -160,33 +160,39 @@ class _SignUpState extends State<SignUp> {
         )
         .timeout(const Duration(seconds: 5));
     if (response.statusCode == 200) {
+      // ignore: avoid_print
       print(response.statusCode);
+      print(phoneNum);
+      return true;
     } else {
+      // ignore: avoid_print
       print(response.statusCode);
+      // ignore: avoid_print
       print(response.reasonPhrase);
+      //return false;
       throw Exception('Failed to send total data');
     }
   }
 
-  PreferredSizeWidget _appbarWidget() {
+  PreferredSizeWidget _signupAppbarWidget() {
     return AppBar(
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_sharp),
-        color: Colors.black,
-        padding: EdgeInsets.zero,
-        onPressed: () {
-          Navigator.pop(context);
-        },
-        constraints: const BoxConstraints(),
-        splashRadius: 24,
-        iconSize: 24,
-        // 아래의 ButtonStyle 추가
-        style: ButtonStyle(
-          minimumSize: MaterialStateProperty.all(Size.zero),
-          padding: MaterialStateProperty.all(EdgeInsets.zero),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-      ),
+      // leading: IconButton(
+      //   icon: const Icon(Icons.arrow_back_sharp),
+      //   color: Colors.black,
+      //   padding: EdgeInsets.zero,
+      //   onPressed: () {
+      //     Navigator.pop(context);
+      //   },
+      //   constraints: const BoxConstraints(),
+      //   splashRadius: 24,
+      //   iconSize: 24,
+      //   // 아래의 ButtonStyle 추가
+      //   style: ButtonStyle(
+      //     minimumSize: MaterialStateProperty.all(Size.zero),
+      //     padding: MaterialStateProperty.all(EdgeInsets.zero),
+      //     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      //   ),
+      // ),
       backgroundColor: Colors.white,
       elevation: 1,
       title: Row(
@@ -223,7 +229,8 @@ class _SignUpState extends State<SignUp> {
           onPressed: () async {},
           child: const Text(
             "완료",
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            style: TextStyle(
+                fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
           ),
         ),
       ],
@@ -301,7 +308,7 @@ class _SignUpState extends State<SignUp> {
                       child: MaterialButton(
                         minWidth: double.infinity,
                         height: 60,
-                        onPressed: () {
+                        onPressed: () async {
                           if (_userNameController.text.isEmpty) {
                             showDialog(
                               context: context,
@@ -607,12 +614,75 @@ class _SignUpState extends State<SignUp> {
                               },
                             );
                           } else {
-                            _sendSignUpDataToServer(
+                            // 모든 필드가 입력되었고 비밀번호가 일치하는 경우
+                            bool success = false;
+                            success = await _sendSignUpDataToServer(
                               name: _userNameController.text,
-                              phoneNum: _phomeNumController.text,
+                              phoneNum:
+                                  _phomeNumController.text.replaceAll('-', ''),
                               userId: _userIDController.text,
                               userPw: _confirmPWController.text,
                             );
+                            if (success) {
+                              // ignore: use_build_context_synchronously
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const LogIn()),
+                              );
+                            } else {
+                              // ignore: use_build_context_synchronously
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    contentPadding:
+                                        const EdgeInsets.fromLTRB(0, 20, 0, 5),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(10.0)),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: const [
+                                        Text(
+                                          "서버와의 통신이 원활하지않습니다.",
+                                        ),
+                                      ],
+                                    ),
+                                    actions: <Widget>[
+                                      Center(
+                                        child: SizedBox(
+                                          width: 250,
+                                          child: ElevatedButton(
+                                            style: ButtonStyle(
+                                              backgroundColor:
+                                                  MaterialStateColor
+                                                      .resolveWith(
+                                                (states) {
+                                                  if (states.contains(
+                                                      MaterialState.disabled)) {
+                                                    return Colors.grey;
+                                                  } else {
+                                                    return Colors.blue;
+                                                  }
+                                                },
+                                              ),
+                                            ),
+                                            child: const Text("확인"),
+                                            onPressed: () {
+                                              Navigator.pop(context);
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            }
                           }
                         },
                         //color: Colors.redAccent,
@@ -663,7 +733,7 @@ class _SignUpState extends State<SignUp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _appbarWidget(),
+      appBar: _signupAppbarWidget(),
       body: _bodyWiget(),
     );
   }
