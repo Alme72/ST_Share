@@ -239,6 +239,7 @@ class _MapViewState extends State<MapView> {
 
   PreferredSizeWidget _appbarWidget() {
     return AppBar(
+      leading: null,
       title: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
@@ -277,7 +278,7 @@ class _MapViewState extends State<MapView> {
         draggable: true,
         child: Container(
           height: 56,
-          color: Colors.grey[300],
+          color: Colors.white,
           alignment: Alignment.center,
           child: _productList(),
         ),

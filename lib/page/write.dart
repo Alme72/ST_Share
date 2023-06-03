@@ -200,7 +200,7 @@ class _WriteState extends State<Write> {
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: const Color.fromARGB(255, 192, 234, 255),
       elevation: 1,
       title: Row(
         children: const [
@@ -232,7 +232,7 @@ class _WriteState extends State<Write> {
                     (states) => Colors.transparent),
                 foregroundColor: MaterialStateColor.resolveWith((states) =>
                     states.contains(MaterialState.pressed)
-                        ? Colors.blue
+                        ? const Color.fromARGB(255, 132, 206, 243)
                         : Colors.black),
               ),
               onPressed: () async {
@@ -268,7 +268,8 @@ class _WriteState extends State<Write> {
                                           .contains(MaterialState.disabled)) {
                                         return Colors.grey;
                                       } else {
-                                        return Colors.blue;
+                                        return const Color.fromARGB(
+                                            255, 132, 206, 243);
                                       }
                                     },
                                   ),
@@ -317,12 +318,18 @@ class _WriteState extends State<Write> {
                                           .contains(MaterialState.disabled)) {
                                         return Colors.grey;
                                       } else {
-                                        return Colors.blue;
+                                        return const Color.fromARGB(
+                                            255, 132, 206, 243);
                                       }
                                     },
                                   ),
                                 ),
-                                child: const Text("확인"),
+                                child: const Text(
+                                  "확인",
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                  ),
+                                ),
                                 onPressed: () {
                                   Navigator.pop(context);
                                 },
@@ -535,7 +542,7 @@ class _WriteState extends State<Write> {
                       price:
                           int.parse(_priceController.text.replaceAll(',', '')));
                   //print("데이터 전송");
-                  //.Navigator.pop(context);
+                  Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const Control()),
@@ -544,7 +551,10 @@ class _WriteState extends State<Write> {
               },
               child: const Text(
                 "완료",
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black),
               ),
             ),
           ),
@@ -603,7 +613,7 @@ class _WriteState extends State<Write> {
                       },
                       //좌측 상단 판매, 구매, 대여 선택바
                       child: SizedBox(
-                        width: 76,
+                        width: 90,
                         child: Row(
                           children: [
                             //앱 내에서 좌측 상단바 출력을 위한 데이터
@@ -624,9 +634,6 @@ class _WriteState extends State<Write> {
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(
-                  width: 5,
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(0, 20, 20, 10),
@@ -842,7 +849,7 @@ class _WriteState extends State<Write> {
           _selectImages();
         },
         tooltip: 'Increment',
-        backgroundColor: const Color.fromARGB(255, 200, 200, 200),
+        backgroundColor: const Color.fromARGB(255, 172, 227, 255),
         label: const Text(
           "이미지 추가",
           style: TextStyle(
