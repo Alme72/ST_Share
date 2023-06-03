@@ -87,9 +87,10 @@ class _HomeState extends State<Home> {
           ),
         ),
       ),
-      backgroundColor: Colors.white, //const Color.fromARGB(255, 184, 210, 255),
+      backgroundColor: const Color.fromARGB(
+          255, 192, 234, 255), //const Color.fromARGB(255, 184, 210, 255),
       elevation: 1.5, // 그림자를 표현되는 높이 3d 측면의 높이를 뜻함.
-      actions: [
+      actions: const [
         // IconButton(
         //   onPressed: () {},
         //   icon: const Icon(
@@ -97,16 +98,16 @@ class _HomeState extends State<Home> {
         //     color: Colors.black,
         //   ),
         // ),
-        Padding(
-          padding: const EdgeInsets.only(right: 10),
-          child: IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.more_vert,
-              color: Colors.black,
-            ),
-          ),
-        ),
+        // Padding(
+        //   padding: const EdgeInsets.only(right: 10),
+        //   child: IconButton(
+        //     onPressed: () {},
+        //     icon: const Icon(
+        //       Icons.more_vert,
+        //       color: Colors.black,
+        //     ),
+        //   ),
+        // ),
       ],
     );
   }

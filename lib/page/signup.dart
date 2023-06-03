@@ -176,23 +176,22 @@ class _SignUpState extends State<SignUp> {
 
   PreferredSizeWidget _signupAppbarWidget() {
     return AppBar(
-      // leading: IconButton(
-      //   icon: const Icon(Icons.arrow_back_sharp),
-      //   color: Colors.black,
-      //   padding: EdgeInsets.zero,
-      //   onPressed: () {
-      //     Navigator.pop(context);
-      //   },
-      //   constraints: const BoxConstraints(),
-      //   splashRadius: 24,
-      //   iconSize: 24,
-      //   // 아래의 ButtonStyle 추가
-      //   style: ButtonStyle(
-      //     minimumSize: MaterialStateProperty.all(Size.zero),
-      //     padding: MaterialStateProperty.all(EdgeInsets.zero),
-      //     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      //   ),
-      // ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_sharp),
+        color: Colors.black,
+        padding: EdgeInsets.zero,
+        onPressed: () {
+          Navigator.pop(context);
+        },
+        constraints: const BoxConstraints(),
+        splashRadius: 24,
+        iconSize: 24,
+        style: ButtonStyle(
+          minimumSize: MaterialStateProperty.all(Size.zero),
+          padding: MaterialStateProperty.all(EdgeInsets.zero),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      ),
       backgroundColor: Colors.white,
       elevation: 1,
       title: Row(
@@ -624,12 +623,14 @@ class _SignUpState extends State<SignUp> {
                               userPw: _confirmPWController.text,
                             );
                             if (success) {
+                              // // ignore: use_build_context_synchronously
+                              // Navigator.push(
+                              //   context,
+                              //   MaterialPageRoute(
+                              //       builder: (context) => const LogIn()),
+                              // );
                               // ignore: use_build_context_synchronously
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const LogIn()),
-                              );
+                              Navigator.pop(context);
                             } else {
                               // ignore: use_build_context_synchronously
                               showDialog(
