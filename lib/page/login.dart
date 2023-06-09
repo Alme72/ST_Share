@@ -20,6 +20,7 @@ class _LogInState extends State<LogIn> {
   TextEditingController userId = TextEditingController();
   TextEditingController userPassword = TextEditingController();
   String? jwt;
+  late int statusCode;
   Map<String, dynamic> payloadedJWT = {};
   // =======================================================
   // 앱내에 JWT 저장
@@ -60,10 +61,15 @@ class _LogInState extends State<LogIn> {
       setState(() {
         final getToken = responseHeader['authorization']!;
         jwt = getToken.replaceFirst("Bearer ", "");
+        statusCode = response.statusCode;
         saveJWT(getToken.replaceFirst("Bearer ", ""), userId);
       });
       return jwt;
     } else {
+      setState(() {
+        statusCode = response.statusCode;
+      });
+      print(response.statusCode);
       print(response.reasonPhrase);
       jwt = null;
       return throw Exception('Failed to send data');
@@ -163,7 +169,7 @@ class _LogInState extends State<LogIn> {
                                 onPressed: () async {
                                   try {
                                     await _saveJWT();
-                                    if (jwt != null) {
+                                    if (statusCode == 200) {
                                       // ignore: use_build_context_synchronously
                                       Navigator.pushAndRemoveUntil(
                                           context,
@@ -171,6 +177,62 @@ class _LogInState extends State<LogIn> {
                                               builder: (context) =>
                                                   const Control()),
                                           (route) => false);
+                                    } else if (statusCode >= 400 &&
+                                        statusCode <= 500) {
+                                      // ignore: use_build_context_synchronously
+                                      showDialog(
+                                        context: context,
+                                        barrierDismissible: false,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            contentPadding:
+                                                const EdgeInsets.fromLTRB(
+                                                    0, 20, 0, 5),
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                        10.0)),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: const [
+                                                Text(
+                                                  "ID 또는 패스워드를 확인해주세요.",
+                                                ),
+                                              ],
+                                            ),
+                                            actions: <Widget>[
+                                              Center(
+                                                child: SizedBox(
+                                                  width: 250,
+                                                  child: ElevatedButton(
+                                                    style: ButtonStyle(
+                                                      backgroundColor:
+                                                          MaterialStateColor
+                                                              .resolveWith(
+                                                        (states) {
+                                                          if (states.contains(
+                                                              MaterialState
+                                                                  .disabled)) {
+                                                            return Colors.grey;
+                                                          } else {
+                                                            return Colors.blue;
+                                                          }
+                                                        },
+                                                      ),
+                                                    ),
+                                                    child: const Text("확인"),
+                                                    onPressed: () {
+                                                      Navigator.pop(context);
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
                                     } else {
                                       // ignore: use_build_context_synchronously
                                       showDialog(
@@ -244,6 +306,9 @@ class _LogInState extends State<LogIn> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.center,
                                             children: const [
+                                              Text(
+                                                "아이디나 패스워드 혹은",
+                                              ),
                                               Text(
                                                 "인터넷 상태를 확인해주세요.",
                                               ),
