@@ -1,6 +1,7 @@
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:test_project/page/home.dart';
+import 'package:test_project/page/pin.dart';
 import '../repository/contents_repository.dart';
 
 class DetailContentView extends StatefulWidget {
@@ -8,21 +9,33 @@ class DetailContentView extends StatefulWidget {
   DetailContentView({Key? key, required this.data}) : super(key: key);
 
   @override
-  _DetailContentViewState createState() => _DetailContentViewState();
+  State<DetailContentView> createState() => _DetailContentViewState();
 }
 
 class _DetailContentViewState extends State<DetailContentView>
     with TickerProviderStateMixin {
-  final ContentsRepository contentsRepository = ContentsRepository();
-  final scaffoldKey = GlobalKey<ScaffoldState>();
-  late Size size;
-
-  late List<String> imgList;
-  late int _current;
   ScrollController controller = ScrollController();
   double locationAlpha = 0;
+  final ContentsRepository contentsRepository = ContentsRepository();
+  final scaffoldKey = GlobalKey<ScaffoldState>();
   late AnimationController _animationController;
   late Animation _colorTween;
+  late List<dynamic> imgList;
+  late Size size;
+  late String username;
+  int _currentPage = 0;
+
+  late String currentLocation;
+  late String cabinetLocation;
+  final Map<String, String> optionsTypeToString = {
+    "setting": "PIN 설정",
+    "unlock": "PIN 해제",
+  };
+  final Map<String, dynamic> cabinetNumberToString = {
+    "default": "캐비넷 번호",
+    "1": "1번 캐비넷",
+    "2": "2번 캐비넷",
+  };
 
   @override
   void initState() {
@@ -30,27 +43,18 @@ class _DetailContentViewState extends State<DetailContentView>
     _animationController = AnimationController(vsync: this);
     _colorTween = ColorTween(begin: Colors.white, end: Colors.black)
         .animate(_animationController);
-    imgList = widget.data["image"];
-    _current = 0;
+    imgList = widget.data["imageList"];
+    _currentPage = 0;
+    cabinetLocation = "default";
+    currentLocation = "setting";
     // _loadMyFavoriteContentState();
-    controller.addListener(() {
-      setState(() {
-        if (controller.offset > 255) {
-          locationAlpha = 255;
-        } else {
-          locationAlpha = controller.offset;
-        }
-        _animationController.value = locationAlpha / 255;
-      });
-    });
   }
 
-  // _loadMyFavoriteContentState() async {
-  //   bool ck = await contentsRepository.isMyFavoriteContents(widget.data["cid"]);
-  //   setState(() {
-  //     isMyFavoriteContent = ck;
-  //   });
-  // }
+  Future<String?> getUserId() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    username = prefs.getString('userId')!;
+    return prefs.getString('userId');
+  }
 
   @override
   void didChangeDependencies() {
@@ -74,44 +78,51 @@ class _DetailContentViewState extends State<DetailContentView>
       ),
       backgroundColor: Colors.white.withAlpha(locationAlpha.toInt()),
       elevation: 0,
-      actions: [
-        IconButton(onPressed: () {}, icon: _makeIcon(Icons.share)),
-        IconButton(onPressed: () {}, icon: _makeIcon(Icons.more_vert)),
-      ],
+      actions: const [],
     );
   }
 
-  Widget _makeSliderImage() {
+  Widget _imageSlider() {
     return SizedBox(
       height: size.width * 0.8,
       child: Stack(
+        alignment: Alignment.bottomRight,
         children: [
-          Hero(
-            tag: widget.data["id"],
-            child: CarouselSlider(
-              options: CarouselOptions(
-                  height: size.width * 0.8,
-                  initialPage: 0,
-                  enableInfiniteScroll: true,
-                  viewportFraction: 1,
-                  enlargeCenterPage: false,
-                  onPageChanged: (index, reason) {
-                    setState(() {
-                      _current = index;
-                    });
-                  }),
-              items: imgList.map((i) {
-                return SizedBox(
-                  width: size.width,
-                  height: size.width,
-                  child: Image.network(
-                    widget.data["image"][_current],
-                    width: double.infinity,
-                    scale: 0.1,
-                    fit: BoxFit.cover,
-                  ),
-                );
-              }).toList(),
+          PageView.builder(
+            itemCount: widget.data["imageList"].length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return SizedBox(
+                width: MediaQuery.of(context).size.width,
+                child: Image.network(
+                  widget.data["imageList"][index],
+                  fit: BoxFit.cover,
+                  errorBuilder: (BuildContext context, Object exception,
+                      StackTrace? stackTrace) {
+                    return Image.asset(
+                      "assets/images/No_image.jpg",
+                      width: 100,
+                      height: 100,
+                    );
+                  },
+                ),
+              );
+            },
+            //enableInfiniteScroll: true,
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+            margin: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(500)),
+            child: Text(
+              '${_currentPage + 1}/${widget.data["imageList"].length}',
+              style: const TextStyle(color: Colors.white),
             ),
           ),
           Positioned(
@@ -120,21 +131,23 @@ class _DetailContentViewState extends State<DetailContentView>
             right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(imgList.length, (index) {
+              children: List.generate(widget.data['imageList'].length, (index) {
                 return Container(
                   width: 8.0,
                   height: 8.0,
                   margin: const EdgeInsets.symmetric(
-                      vertical: 10.0, horizontal: 5.0),
+                    vertical: 10.0,
+                    horizontal: 5.0,
+                  ),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _current == index
+                    color: _currentPage == index
                         ? Colors.black //Colors.white
                         : Colors.grey
                             .withOpacity(0.4), //Colors.white.withOpacity(0.4),
                   ),
                 );
-              }).toList(),
+              }),
             ),
           )
         ],
@@ -142,7 +155,7 @@ class _DetailContentViewState extends State<DetailContentView>
     );
   }
 
-  Widget _sellerSimpleInfo() {
+  Widget _sellerInfo() {
     return Column(
       children: [
         Padding(
@@ -162,7 +175,7 @@ class _DetailContentViewState extends State<DetailContentView>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.data["boardWriter"],
+                    widget.data["username"],
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 16),
                   ),
@@ -195,14 +208,14 @@ class _DetailContentViewState extends State<DetailContentView>
         children: [
           const SizedBox(height: 20),
           Text(
-            widget.data["boardTitle"],
+            widget.data["title"],
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
-            "디지털/가전 ∙ ${widget.data["boardCreatedTime"]}", //category 추가 건의
+            "${widget.data["itemCategory"]}", // ∙ ${widget.data["boardCreatedTime"]}", //category 추가 건의
             style: const TextStyle(
               fontSize: 12,
               color: Colors.grey,
@@ -210,21 +223,21 @@ class _DetailContentViewState extends State<DetailContentView>
           ),
           const SizedBox(height: 15),
           Text(
-            widget.data["boardContents"],
+            widget.data["content"],
             style: const TextStyle(fontSize: 15, height: 1.5),
           ),
           const SizedBox(height: 15),
-          Row(
-            children: [
-              Text(
-                "조회수 ∙ ${widget.data["boardHits"].toString()}",
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
+          // Row(
+          //   children: [
+          //     Text(
+          //       "조회수 ∙ ${widget.data["boardHits"].toString()}",
+          //       style: const TextStyle(
+          //         fontSize: 12,
+          //         color: Colors.grey,
+          //       ),
+          //     ),
+          //   ],
+          // ),
           const SizedBox(height: 15),
         ],
       ),
@@ -236,8 +249,8 @@ class _DetailContentViewState extends State<DetailContentView>
       SliverList(
         delegate: SliverChildListDelegate(
           [
-            _makeSliderImage(),
-            _sellerSimpleInfo(),
+            _imageSlider(),
+            _sellerInfo(),
             _line(),
             _contentDetail(),
             _line(),
@@ -253,9 +266,9 @@ class _DetailContentViewState extends State<DetailContentView>
       width: MediaQuery.of(context).size.width,
       padding: const EdgeInsets.symmetric(horizontal: 15),
       height: 55,
-      //color: Colors.white,
       child: Row(
         children: [
+          // 관심 목록(좋아요) 기능 -> 현재 구현 X
           // GestureDetector(
           //   onTap: () async {
           //     if (isMyFavoriteContent) {
@@ -283,11 +296,12 @@ class _DetailContentViewState extends State<DetailContentView>
           //   ),
           // ),
           Container(
-            margin: const EdgeInsets.only(left: 15, right: 10),
+            margin: const EdgeInsets.only(left: 10, right: 10),
             height: 40,
             width: 1,
             color: Colors.grey.withOpacity(0.3),
           ),
+          // 가격 표기
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,19 +319,151 @@ class _DetailContentViewState extends State<DetailContentView>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 7),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    color: const Color.fromARGB(255, 132, 206, 243),
+                // 연락처 확인 버튼 -> 채팅 기능 구현 후 채팅 버튼으로 수정 예정
+                Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: GestureDetector(
+                    onTap: () async {
+                      print('${widget.data}');
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            contentPadding:
+                                const EdgeInsets.fromLTRB(0, 20, 0, 5),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0)),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "${widget.data["phoneNum"]}",
+                                ),
+                              ],
+                            ),
+                            actions: <Widget>[
+                              Center(
+                                child: SizedBox(
+                                  width: 250,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 132, 206, 243),
+                                    ),
+                                    child: const Text("확인"),
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 7),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        color: const Color.fromARGB(255, 132, 206, 243),
+                      ),
+                      child: const Text(
+                        "연락처",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
                   ),
-                  child: const Text(
-                    "채팅으로 거래하기",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 16,
+                ),
+                // PIN 입력 페이지 이동 버튼
+                Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: GestureDetector(
+                    onTap: () async {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => PIN(
+                                  data: widget.data,
+                                )),
+                      );
+                      // await getUserId();
+                      // if (widget.data['username'] == username) {
+                      //   // ignore: use_build_context_synchronously
+                      //   Navigator.push(
+                      //     context,
+                      //     MaterialPageRoute(
+                      //         builder: (context) => PIN(
+                      //               data: widget.data,
+                      //             )),
+                      //   );
+                      // } else {
+                      //   // ignore: use_build_context_synchronously
+                      //   showDialog(
+                      //     context: context,
+                      //     barrierDismissible: false,
+                      //     builder: (BuildContext context) {
+                      //       return AlertDialog(
+                      //         contentPadding:
+                      //             const EdgeInsets.fromLTRB(0, 20, 0, 5),
+                      //         shape: RoundedRectangleBorder(
+                      //             borderRadius: BorderRadius.circular(10.0)),
+                      //         content: Column(
+                      //           mainAxisSize: MainAxisSize.min,
+                      //           crossAxisAlignment: CrossAxisAlignment.center,
+                      //           children: const [
+                      //             Text(
+                      //               "게시글 작성자만",
+                      //             ),
+                      //             Text(
+                      //               "PIN 등록 / 해제가 가능합니다.",
+                      //             ),
+                      //           ],
+                      //         ),
+                      //         actions: <Widget>[
+                      //           Center(
+                      //             child: SizedBox(
+                      //               width: 250,
+                      //               child: ElevatedButton(
+                      //                 style: ElevatedButton.styleFrom(
+                      //                   backgroundColor: const Color.fromARGB(
+                      //                       255, 132, 206, 243),
+                      //                 ),
+                      //                 child: const Text("확인"),
+                      //                 onPressed: () {
+                      //                   Navigator.pop(context);
+                      //                 },
+                      //               ),
+                      //             ),
+                      //           ),
+                      //         ],
+                      //       );
+                      //     },
+                      //   );
+                      // }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 7),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        color: const Color.fromARGB(255, 132, 206, 243),
+                      ),
+                      child: const Text(
+                        "PIN 설정 / 해제",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
                     ),
                   ),
                 ),

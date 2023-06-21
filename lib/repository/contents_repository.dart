@@ -2,247 +2,143 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+// 유저 데이터를 저장하는 클래스
 class UserInfo {
   static late String userId;
-  late String userNickName = "DefaultName";
   late String password;
+  static late String jwt;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'username': userId,
+      //'name': name,
+    };
+  }
 }
 
+// 서버로 부터 받은 게시글 데이터를 다루는 클래스
 class ContentsRepository {
-  List<Map<String, dynamic>> data = [];
-  Map<String, dynamic> datas = {
-    "sell": [
-      {
-        "id": 14,
-        "image": [
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-        ],
-        "boardWriter": "22",
-        "boardTitle": "22",
-        "boardContents": "22",
-        "location": "서울",
-        "price": 20000,
-        "boardHits": 2,
-        "boardCreatedTime": "2023-03-24T18:31:47.576233",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      },
-      {
-        "id": 15,
-        "image": [
-          "https://images.pexels.com/photos/90946/pexels-photo-90946.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-          "https://images.pexels.com/photos/4158/apple-iphone-smartphone-desk.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-          "https://images.pexels.com/photos/1738641/pexels-photo-1738641.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-        ],
-        "boardWriter": "test123",
-        "boardTitle": "안녕하세요",
-        "boardContents": "ㅇㅇㅇ",
-        "location": "강남",
-        "price": 25000,
-        "boardHits": 7,
-        "boardCreatedTime": "2023-03-28T19:32:48.417641",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      },
-      {
-        "id": 16,
-        "image": [
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Pepsi-300x300.jpg",
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-        ],
-        "boardWriter": "input",
-        "boardTitle": "test",
-        "boardContents": "슈퍼 해머드릴",
-        "location": "부천시 경인로",
-        "price": 120000,
-        "boardHits": 10,
-        "boardCreatedTime": "2023-03-28T10:59:10.492566",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      },
-      {
-        "id": 16,
-        "image": [
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Pepsi-300x300.jpg",
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-        ],
-        "boardWriter": "input",
-        "boardTitle": "test",
-        "boardContents": "슈퍼 해머드릴",
-        "location": "부천시 경인로",
-        "price": 120000,
-        "boardHits": 10,
-        "boardCreatedTime": "2023-03-28T10:59:10.492566",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      },
-      {
-        "id": 16,
-        "image": [
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Pepsi-300x300.jpg",
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-        ],
-        "boardWriter": "input",
-        "boardTitle": "test",
-        "boardContents": "슈퍼 해머드릴",
-        "location": "부천시 경인로",
-        "price": 120000,
-        "boardHits": 10,
-        "boardCreatedTime": "2023-03-28T10:59:10.492566",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      },
-      {
-        "id": 16,
-        "image": [
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Pepsi-300x300.jpg",
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-        ],
-        "boardWriter": "input",
-        "boardTitle": "test",
-        "boardContents": "슈퍼 해머드릴",
-        "location": "부천시 경인로",
-        "price": 120000,
-        "boardHits": 10,
-        "boardCreatedTime": "2023-03-28T10:59:10.492566",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      },
-    ],
-    "buy": [
-      {
-        "id": 14,
-        "image": [
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Pepsi-300x300.jpg",
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-        ],
-        "boardWriter": "22",
-        "boardTitle": "22",
-        "boardContents": "22",
-        "location": "서울",
-        "price": 20000,
-        "boardHits": 2,
-        "boardCreatedTime": "2023-03-24T18:31:47.576233",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      },
-      {
-        "id": 15,
-        "image": [
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Pepsi-300x300.jpg",
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-        ],
-        "boardWriter": "test123",
-        "boardTitle": "안녕하세요",
-        "boardContents": "ㅇㅇㅇ",
-        "location": "강남",
-        "price": 25000,
-        "boardHits": 7,
-        "boardCreatedTime": "2023-03-28T19:32:48.417641",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      },
-      {
-        "id": 16,
-        "image": [
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Pepsi-300x300.jpg",
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-        ],
-        "boardWriter": "input",
-        "boardTitle": "test",
-        "boardContents": "슈퍼 해머드릴",
-        "location": "부천시 경인로",
-        "price": 120000,
-        "boardHits": 10,
-        "boardCreatedTime": "2023-03-28T10:59:10.492566",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      }
-    ],
-    "rental": [
-      {
-        "id": 14,
-        "image": [
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Pepsi-300x300.jpg",
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-        ],
-        "boardWriter": "22",
-        "boardTitle": "22",
-        "boardContents": "22",
-        "location": "서울",
-        "price": 20000,
-        "boardHits": 2,
-        "boardCreatedTime": "2023-03-24T18:31:47.576233",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      },
-      {
-        "id": 15,
-        "image": [
-          //{imageSererURL}+"/"+"100022",
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-        ],
-        "boardWriter": "test123",
-        "boardTitle": "안녕하세요",
-        "boardContents": "ㅇㅇㅇ",
-        "location": "강남",
-        "price": 25000,
-        "boardHits": 7,
-        "boardCreatedTime": "2023-03-28T19:32:48.417641",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      },
-      {
-        "id": 16,
-        "image": [
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Pepsi-300x300.jpg",
-          "https://greendroprecycling.com/wp-content/uploads/2017/04/GreenDrop_Station_Aluminum_Can_Coke-300x300.jpg",
-          "https://www.tylenolprofessional.com/sites/tylenol_hcp_us/files/sample-display-image/tylenol-product-samples600x600.jpg",
-        ],
-        "boardWriter": "input",
-        "boardTitle": "test",
-        "boardContents": "슈퍼 해머드릴",
-        "location": "부천시 경인로",
-        "price": 120000,
-        "boardHits": 10,
-        "boardCreatedTime": "2023-03-28T10:59:10.492566",
-        "boardUpdatedTime": "2023-03-31T09:25:00",
-      }
-    ],
+  //서버를 통해 받는 게시글 데이터의 원본을 저장하는 변수
+  Map<String, dynamic> originBoardDatas = {};
+  //게시글 구현을 위한 변환 데이터를 저장할 변수
+  Map<String, List<Map<String, dynamic>>> mainBoardDatas = {};
+  Map<String, List<Map<String, dynamic>>> recentmainBoardDatas = {};
+  // 중계기 위치를 나타나낸 변수
+  Map<String, dynamic> repeaterLocation = {
+    'image': '',
+    'title': '경기대학교 중계기',
+    'location': '경기도 수원시 영통구 광교산로 154-42',
   };
-  //String serverURL = "https://ubuntu.i4624.tk/image/imageid/";
-  void jsonToData() {
-    for (var i = 0; i < data.length; i++) {
-      var item = data[i];
-      //datas[item['image']] = serverURL + item['image'];
-      if (datas[item['boardCategory']] == null) {
-        datas[item['boardCategory']] = [item];
-      } else {
-        datas[item['boardCategory']]!.add(item);
-      }
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> loadData() async {
-    var url = Uri.parse('https://ubuntu.i4624.tk/boardapi/boardlist');
-    var response = await http.get(url);
+  // 서버에서 게시글 데이터를 불러오는 함수
+  Future<Map<String, dynamic>> loadData() async {
+    var uri = Uri.parse('https://ubuntu.i4624.tk/api/v1/post/list');
+    final headers = {'Authorization': 'Bearer ${UserInfo.jwt}'};
+    final response = await http.get(
+      uri,
+      headers: headers,
+    );
+    //.timeout(const Duration(seconds: 5));
     if (response.statusCode == 200) {
-      final List<dynamic> responseData =
+      final Map<String, dynamic> responseData =
           jsonDecode(utf8.decode(response.bodyBytes));
-      data = responseData
-          .map((dynamic item) => Map<String, dynamic>.from(item))
-          .toList();
-      //jsonToData();
-      return data;
+      originBoardDatas = responseData;
+      print(originBoardDatas);
+      return responseData;
     } else {
+      //print(response.statusCode);
       throw Exception('Failed to load data');
     }
   }
 
+  Future<Map<String, dynamic>> loadBoradData() async {
+    try {
+      originBoardDatas = await loadData();
+      convertData(originBoardDatas);
+      //print(originBoardDatas);
+      print(mainBoardDatas);
+    } catch (e) {
+      print('Failed to load data: $e');
+    }
+    return originBoardDatas;
+  }
+
+// datas를 mainDatas로 변환시키는 함수
+  Map<String, List<Map<String, dynamic>>> convertData(
+      Map<String, dynamic> datas) {
+    List<Map<String, dynamic>> postResponses =
+        List<Map<String, dynamic>>.from(datas['postResponses']);
+    postResponses.sort((a, b) => b['postid'].compareTo(a['postid']));
+
+    for (var data in postResponses) {
+      var category = data['boardCategory'];
+      var productCategory = data['itemCategory'];
+      var imageList = data['imageList'];
+      var convertedProductCategory = '';
+      var content = '';
+
+      // 변환된 productCategory 값에 따라 카테고리를 설정
+      if (productCategory == 'electronics') {
+        convertedProductCategory = '디지털/전자';
+      } else if (productCategory == 'tools') {
+        convertedProductCategory = '공구';
+      } else if (productCategory == 'clothes') {
+        convertedProductCategory = '의류';
+      } else if (productCategory == 'others') {
+        convertedProductCategory = '기타';
+      } else {
+        convertedProductCategory = data['itemCategory'];
+      }
+
+      var imageUrls = imageList
+          .map((imageId) =>
+              'https://ubuntu.i4624.tk/image/imageid/${imageId['urid']}')
+          .toList();
+
+      if (data['content'] == null) {
+        content = '내용이 없음';
+      } else {
+        content = data['content'];
+      }
+
+      var phoneNumber = data['phone'] as String;
+      phoneNumber = phoneNumber
+          .replaceFirstMapped(RegExp(r'^(\d{3})(\d{4})(\d{4})$'), (match) {
+        return '${match[1]}-${match[2]}-${match[3]}';
+      });
+
+      var convertedData = {
+        'postId': data['postid'],
+        'username': data['username'],
+        'title': data['title'],
+        'location': data['location'],
+        'price': data['price'],
+        'content': content,
+        'imageList': imageUrls,
+        'itemCategory': convertedProductCategory,
+        'phoneNum': phoneNumber,
+      };
+
+      if (mainBoardDatas.containsKey(category)) {
+        mainBoardDatas[category]!.add(convertedData);
+      } else {
+        mainBoardDatas[category] = [convertedData];
+      }
+    }
+
+    return mainBoardDatas;
+  }
+
+  Map<String, List<Map<String, dynamic>>> convertRecentData() {
+    return recentmainBoardDatas;
+  }
+
   Future<List<Map<String, dynamic>>> loadContentsFromLocation(
       String location) async {
-    //await loadData();
-    //jsonToData();
-    return datas[location]!;
+    await loadBoradData();
+    return mainBoardDatas[location]!;
+  }
+
+  Future<Map<String, dynamic>> loadRepeaterFromLocation() async {
+    return repeaterLocation;
   }
 }
