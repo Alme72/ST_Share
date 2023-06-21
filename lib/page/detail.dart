@@ -394,60 +394,6 @@ class _DetailContentViewState extends State<DetailContentView>
                                   data: widget.data,
                                 )),
                       );
-                      // await getUserId();
-                      // if (widget.data['username'] == username) {
-                      //   // ignore: use_build_context_synchronously
-                      //   Navigator.push(
-                      //     context,
-                      //     MaterialPageRoute(
-                      //         builder: (context) => PIN(
-                      //               data: widget.data,
-                      //             )),
-                      //   );
-                      // } else {
-                      //   // ignore: use_build_context_synchronously
-                      //   showDialog(
-                      //     context: context,
-                      //     barrierDismissible: false,
-                      //     builder: (BuildContext context) {
-                      //       return AlertDialog(
-                      //         contentPadding:
-                      //             const EdgeInsets.fromLTRB(0, 20, 0, 5),
-                      //         shape: RoundedRectangleBorder(
-                      //             borderRadius: BorderRadius.circular(10.0)),
-                      //         content: Column(
-                      //           mainAxisSize: MainAxisSize.min,
-                      //           crossAxisAlignment: CrossAxisAlignment.center,
-                      //           children: const [
-                      //             Text(
-                      //               "게시글 작성자만",
-                      //             ),
-                      //             Text(
-                      //               "PIN 등록 / 해제가 가능합니다.",
-                      //             ),
-                      //           ],
-                      //         ),
-                      //         actions: <Widget>[
-                      //           Center(
-                      //             child: SizedBox(
-                      //               width: 250,
-                      //               child: ElevatedButton(
-                      //                 style: ElevatedButton.styleFrom(
-                      //                   backgroundColor: const Color.fromARGB(
-                      //                       255, 132, 206, 243),
-                      //                 ),
-                      //                 child: const Text("확인"),
-                      //                 onPressed: () {
-                      //                   Navigator.pop(context);
-                      //                 },
-                      //               ),
-                      //             ),
-                      //           ),
-                      //         ],
-                      //       );
-                      //     },
-                      //   );
-                      // }
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
